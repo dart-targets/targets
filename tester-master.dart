@@ -31,7 +31,9 @@ void runTests(){
             maxPoints += t.points;
             var s = 0;
             try{
+                print = noprint;
                 s = t.test();
+                print = yesprint;
             }catch(e){
                 String error = e.toString().replaceAll("\n"," ");
                 print("Test ${t.name} failed with error: $error", RED);
@@ -50,7 +52,9 @@ void runTests(){
         }else if(t is Tests.TestTarget){
             bool result = false;
             try{
+                print = noprint;
                 result = t.test();
+                print = yesprint;
             }catch(e){
                 String error = e.toString().replaceAll("\n"," ");
                 print("Test ${t.name} failed with error: $error", RED);
@@ -82,7 +86,7 @@ const String GREEN = "green";
 const String RED = "red";
 const String BLUE = "blue";
 
-Function print = (String str, [String type=PLAIN]){
+Function yesprint = (String str, [String type=PLAIN]){
     if(type==PLAIN||Platform.isWindows){
         stdout.writeln(str);
     }else if(type==RED){
@@ -93,3 +97,7 @@ Function print = (String str, [String type=PLAIN]){
         stdout.writeln("\u001b[0;34m"+str+"\u001b[0;0m");
     }
 };
+
+Function print = yesprint;
+
+Function noprint = (String str){};
