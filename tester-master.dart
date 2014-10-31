@@ -31,9 +31,7 @@ void runTests(){
             maxPoints += t.points;
             var s = 0;
             try{
-                print = noprint;
                 s = t.test();
-                print = yesprint;
             }catch(e){
                 String error = e.toString().replaceAll("\n"," ");
                 print("Test ${t.name} failed with error: $error", RED);
@@ -52,9 +50,7 @@ void runTests(){
         }else if(t is Tests.TestTarget){
             bool result = false;
             try{
-                print = noprint;
                 result = t.test();
-                print = yesprint;
             }catch(e){
                 String error = e.toString().replaceAll("\n"," ");
                 print("Test ${t.name} failed with error: $error", RED);
