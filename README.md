@@ -38,3 +38,5 @@ You can install targets with:
     pub global activate targets
 
 The code is available on GitHub under the revised BSD license.
+
+Note: I've published this under my school email to avoid posting my personal Gmail. If you want to contact me, jack@jackthakar.com is your best option.

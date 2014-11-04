@@ -128,7 +128,7 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner]){
                         if(!isTeacher)print("Found assignment. Downloading...",BLUE);
                         Process.start("git",['clone',url]).then((prc) {
                             prc.exitCode.then((ec){
-                                new Directory("targets-$id").renameSync(id2);
+                                new Directory("targets-$id").renameSync(id);
                                 String baseName = Platform.script.toFilePath();
                                 baseName = baseName.substring(0, baseName.length-12);
                                 String testerName = baseName + "tester-master.dart";

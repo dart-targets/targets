@@ -1,5 +1,5 @@
 name: targets
-author: Jack Thakar <jack@jackthakar.com>
+author: Jack Thakar <jthakar@berkeley.edu>
 homepage: http://github.com/dart-targets/targets
 version: 0.2.1
 description: Simple autograder for Dart
