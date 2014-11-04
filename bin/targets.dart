@@ -3,7 +3,7 @@
 import 'dart:io';
 import 'dart:convert';
 
-const String VERSION = "0.2";
+const String VERSION = "0.2.1";
 
 void main(var args){
     if(Platform.isWindows){
@@ -13,24 +13,23 @@ void main(var args){
     }
     if(args.length==0||args[0]=="info"||args[0]=="--version"){
         print("targets $VERSION", GREEN);
-        print("Copyright 2014 Jack Thakar", GREEN);
-        print("http://targets.jackthakar.com", BLUE);
+        print("darttargets.com", BLUE);
         print("Run 'targets help' for list of commands");
     }else if(args[0]=="help"||args[0]=="--help"){
         print("Usage: targets <command>");
         print("Student Commands:");
         print("   setup             Sets up targets for user");
-        print("   get <assignment>  Downloads assignment with name from server");
+        print("   get <assignment>  Downloads assignment with name from GitHub");
         print("   check             Runs tests on assignment");
         print("   submit            Submits assignment to server");
         print("");
         print("Teacher Commands:");
-        print("   init              Creates .targets folder with templates");
+        print("   init              Downloads template from GitHub");
+        print("   init <assignment> Downloads assignment from GitHub as template");
         print("");
         print("Teachers should upload completed templates with tests to GitHub");
-        print("Repo url with form github.com/username/project-targets");
+        print("Repo url with form github.com/username/targets-project");
         print("can be downloaded with get command as username/project");
-        print("");
     }else if(args[0]=="setup"){
         setup();
     }else if(args[0]=="get"){
@@ -46,7 +45,11 @@ void main(var args){
     }else if(args[0]=="manual-submit"){
         submit(true);
     }else if(args[0]=="init"){
-        getAssignment("example",true);
+        if(args.length==1){
+            getAssignment("example",true);
+        }else{
+            getAssignment(args[1],true);
+        }
     }
 }
 
@@ -89,7 +92,15 @@ checkAssign(){
 
 getAssignment(String name, bool isTeacher){
     //Process.start("git",['clone','https://github.com/jathak/ucapcredit.git']);
-    if(name.contains(":")){
+    if (name.contains(":")&&name.contains("/")){
+        var parts = name.split(":");
+        var parts2 = parts[1].split("/");
+        String owner = parts[0];
+        String githubUser = parts2[0];
+        String id = parts2[1];
+        String url = 'https://github.com/$githubUser/targets-$id';
+        gitLoad(url, id, isTeacher, owner);
+    }else if(name.contains(":")){
         var parts = name.split(":");
         String url = 'https://github.com/dart-targets/targets-${parts[1]}.git';
         gitLoad(url, parts[1], isTeacher, parts[0]);
@@ -104,16 +115,11 @@ getAssignment(String name, bool isTeacher){
 }
 
 gitLoad(String url, String id, bool isTeacher, [String newOwner]){
-    if(!isTeacher&& new Directory(id).existsSync()){
+    if(new Directory(id).existsSync()){
         print("Assignment already downloaded",RED);
         return;
-    }else if(isTeacher&& new Directory("template").existsSync()){
-        print("Template already exists",RED);
-        print("Rename existing assignment to download a new template");
-        return;
     }
-    if(isTeacher)print("Downloading template...");
-    else print("Checking if assignment exists...");
+    print("Checking if assignment exists...");
     Process.start("git",['ls-remote',url]).then((process) {
         process.stdout.transform(new Utf8Decoder())
                 .transform(new LineSplitter())
@@ -122,18 +128,16 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner]){
                         if(!isTeacher)print("Found assignment. Downloading...",BLUE);
                         Process.start("git",['clone',url]).then((prc) {
                             prc.exitCode.then((ec){
-                                String id2 = id;
-                                if(isTeacher) id2 = "template";
                                 new Directory("targets-$id").renameSync(id2);
                                 String baseName = Platform.script.toFilePath();
                                 baseName = baseName.substring(0, baseName.length-12);
                                 String testerName = baseName + "tester-master.dart";
                                 String helperName = baseName + "helpers-master.dart";
-                                new File(testerName).copySync("$id2/targets/tester.dart");
-                                new File(helperName).copySync("$id2/targets/helpers.dart");
-                                new Directory("$id2/.git").deleteSync(recursive: true);
+                                new File(testerName).copySync("$id/targets/tester.dart");
+                                new File(helperName).copySync("$id/targets/helpers.dart");
+                                new Directory("$id/.git").deleteSync(recursive: true);
                                 if(!isTeacher){
-                                    File tests = new File("$id2/targets/tests.dart");
+                                    File tests = new File("$id/targets/tests.dart");
                                     var lines = tests.readAsLinesSync();
                                     String text = "";
                                     for(String str in lines){
@@ -142,8 +146,8 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner]){
                                         }else if(!str.startsWith("///"))text+="$str\n";
                                     }
                                     tests.writeAsStringSync(text);
-                                    print("Assignment downloaded to '$id2'",GREEN);
-                                }else print("Template downloaded to 'template'",GREEN);
+                                    print("Assignment downloaded to '$id'",GREEN);
+                                }else print("Template downloaded to '$id'",GREEN);
                             });
                         });
                     }
