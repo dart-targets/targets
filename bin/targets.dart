@@ -91,7 +91,6 @@ checkAssign(){
 }
 
 getAssignment(String name, bool isTeacher){
-    //Process.start("git",['clone','https://github.com/jathak/ucapcredit.git']);
     if (name.contains(":")&&name.contains("/")){
         var parts = name.split(":");
         var parts2 = parts[1].split("/");
@@ -99,11 +98,11 @@ getAssignment(String name, bool isTeacher){
         String githubUser = parts2[0];
         String id = parts2[1];
         String url = 'https://github.com/$githubUser/targets-$id';
-        gitLoad(url, id, isTeacher, owner);
+        gitLoad(url, id, isTeacher, owner, githubUser);
     }else if(name.contains(":")){
         var parts = name.split(":");
         String url = 'https://github.com/dart-targets/targets-${parts[1]}.git';
-        gitLoad(url, parts[1], isTeacher, parts[0]);
+        gitLoad(url, parts[1], isTeacher, parts[0], "dart-targets");
     }else if(name.contains("/")){
         var parts = name.split("/");
         String url = 'https://github.com/${parts[0]}/targets-${parts[1]}.git';
@@ -114,7 +113,7 @@ getAssignment(String name, bool isTeacher){
     }
 }
 
-gitLoad(String url, String id, bool isTeacher, [String newOwner]){
+gitLoad(String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
     if(new Directory(id).existsSync()){
         print("Assignment already downloaded",RED);
         return;
@@ -139,7 +138,7 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner]){
                                     var lines = tests.readAsLinesSync();
                                     String text = "";
                                     for(String str in lines){
-                                        if(str=='final String owner = "dart-targets";'&&newOwner!=null){
+                                        if(str=='final String owner = "$oldOwner";'&&newOwner!=null){
                                             text += 'final String owner = "$newOwner";\n';
                                         }else if(!str.startsWith("///"))text+="$str\n";
                                     }
@@ -187,7 +186,7 @@ submit(bool manual){
                 }
                 data = data.substring(0,data.length-1) + ";" + infoString;
                 String fullData = Base64.encode(data).replaceAll("\r\n","");
-                String url = "http://targets.jackthakar.com/submit?data="+fullData;
+                String url = "http://darttargets.com/submit?data="+fullData;
                 if(manual){
                     print("Please paste the following URL into your browser:",BLUE);
                     print(url);
