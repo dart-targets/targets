@@ -131,8 +131,8 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner]){
                                 new Directory("targets-$id").renameSync(id);
                                 String baseName = Platform.script.toFilePath();
                                 baseName = baseName.substring(0, baseName.length-12);
-                                String testerName = baseName + "tester-master.dart";
-                                String helperName = baseName + "helpers-master.dart";
+                                String testerName = baseName + "tester.dart";
+                                String helperName = baseName + "helpers.dart";
                                 new File(testerName).copySync("$id/targets/tester.dart");
                                 new File(helperName).copySync("$id/targets/helpers.dart");
                                 new Directory("$id/.git").deleteSync(recursive: true);
