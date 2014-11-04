@@ -1,0 +1,4 @@
+name: targets
+description: Autograder for Dart
+executables:
+    targets: targets.dart

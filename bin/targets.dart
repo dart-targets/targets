@@ -125,10 +125,12 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner]){
                                 String id2 = id;
                                 if(isTeacher) id2 = "template";
                                 new Directory("targets-$id").renameSync(id2);
-                                String testerName = Platform.script.toFilePath();
-                                testerName = testerName.substring(0, testerName.length-7);
-                                testerName += "tester-master.dart";
+                                String baseName = Platform.script.toFilePath();
+                                baseName = baseName.substring(0, baseName.length-12);
+                                String testerName = baseName + "tester-master.dart";
+                                String helperName = baseName + "helpers-master.dart";
                                 new File(testerName).copySync("$id2/targets/tester.dart");
+                                new File(helperName).copySync("$id2/targets/helpers.dart");
                                 new Directory("$id2/.git").deleteSync(recursive: true);
                                 if(!isTeacher){
                                     File tests = new File("$id2/targets/tests.dart");
@@ -215,7 +217,7 @@ String prompt(String str, [String type=PLAIN]){
     }else if(type==GREEN){
         stdout.write("\u001b[0;32m"+str+"\u001b[0;0m ");
     }else if(type==BLUE){
-        stdout.write("\u001b[0;34m"+str+"\u001b[0;0m ");
+        stdout.write("\u001b[0;36m"+str+"\u001b[0;0m ");
     }
     return stdin.readLineSync();
 }
@@ -228,7 +230,7 @@ Function print = (String str, [String type=PLAIN]){
     }else if(type==GREEN){
         stdout.writeln("\u001b[0;32m"+str+"\u001b[0;0m");
     }else if(type==BLUE){
-        stdout.writeln("\u001b[0;34m"+str+"\u001b[0;0m");
+        stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
     }
 };
 

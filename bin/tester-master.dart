@@ -4,6 +4,7 @@
 
 import 'dart:io';
 import 'tests.dart' as Tests;
+import 'helpers.dart';
 
 main(List<String> args){
     if(args.length==0)runTests();
@@ -26,8 +27,8 @@ void runTests(){
     num score = 0;
     num maxPoints = 0;
     bool allPassed = true;
-    for(Tests.Target t in targets){
-        if(t is Tests.ScoredTarget){
+    for(Target t in targets){
+        if(t is ScoredTarget){
             maxPoints += t.points;
             var s = 0;
             try{
@@ -48,7 +49,7 @@ void runTests(){
                 extra = "- ${t.error}";
             }
             print("${t.name}: $s/${t.points} $extra");
-        }else if(t is Tests.TestTarget){
+        }else if(t is TestTarget){
             bool result = false;
             try{
                 result = t.test();
@@ -92,7 +93,7 @@ Function yesprint = (String str, [String type=PLAIN]){
     }else if(type==GREEN){
         stdout.writeln("\u001b[0;32m"+str+"\u001b[0;0m");
     }else if(type==BLUE){
-        stdout.writeln("\u001b[0;34m"+str+"\u001b[0;0m");
+        stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
     }
 };
 
