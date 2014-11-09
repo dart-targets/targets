@@ -3,7 +3,7 @@
 import 'dart:io';
 import 'dart:convert';
 
-const String VERSION = "0.2.3";
+const String VERSION = "0.3.0";
 
 void main(var args){
     if(Platform.isWindows){
@@ -26,10 +26,11 @@ void main(var args){
         print("Teacher Commands:");
         print("   init              Downloads template from GitHub");
         print("   init <assignment> Downloads assignment from GitHub as template");
+        print("   batch             Grades multiple submissions downloaded from server");
         print("");
         print("Teachers should upload completed templates with tests to GitHub");
         print("Repo url with form github.com/username/targets-project");
-        print("can be downloaded with get command as username/project");
+        print("can be downloaded with targets get as username/project");
     }else if(args[0]=="setup"){
         setup();
     }else if(args[0]=="get"){
@@ -50,6 +51,8 @@ void main(var args){
         }else{
             getAssignment(args[1],true);
         }
+    }else if(args[0]=="batch"){
+        batch();
     }
 }
 
@@ -197,11 +200,69 @@ submit(bool manual){
                     Process.start('xdg-open',[url]);
                     print("If your browser does not open, try 'targets manual-submit'", BLUE);
                 }else if(Platform.isWindows){
-                    Process.run('start',[url]);
+                    Process.run('start',[url],runInShell:true);
                     print("If your browser does not open, try 'targets manual-submit'", BLUE);
                 }
             }
         });
+    }
+}
+
+batch(){
+    File tests = new File("targets/tests.dart");
+    File alttests = new File("template/targets/tests.dart");
+    if(!tests.existsSync()&&!alttests.existsSync()){
+        print("You need to add targets/tests.dart to this directory first!",RED);
+        return;
+    }
+    String log = "";
+    var directs = Directory.current.listSync();
+    for(var dir in directs){
+        if(dir is Directory){
+            String dirpath = dir.path.split(Platform.pathSeparator).last;
+            if(dirpath!="targets" && dirpath!="template"){
+                log+="$dirpath\n****************************************\n";
+                print("Testing $dirpath...");
+                Directory temp = new Directory(".temp");
+                temp.createSync();
+                copyDirectory(new Directory("template"), temp);
+                copyDirectory(new Directory("targets"), new Directory(".temp/targets"));
+                copyDirectory(dir, temp);
+                new File(".temp/targets/tester.dart").writeAsStringSync(tester_dart);
+                new File(".temp/targets/helpers.dart").writeAsStringSync(helpers_dart);
+                var current = Directory.current;
+                Directory.current = ".temp";
+                var res = Process.runSync("dart",["targets/tester.dart"]);
+                log+=res.stdout;
+                log+=res.stderr;
+                log+="\n";
+                Directory.current = current;
+                temp.deleteSync(recursive:true);
+            }
+        }
+    }
+    log = log.replaceAll("\u001b[0;31m","");
+    log = log.replaceAll("\u001b[0;32m","");
+    log = log.replaceAll("\u001b[0;36m","");
+    log = log.replaceAll("\u001b[0;0m","");
+    log = log.replaceAll("\r\n","\n");
+    if(Platform.isWindows){
+        log = log.replaceAll("\n","\r\n");
+    }
+    new File("log.txt").writeAsStringSync(log);
+    print("Tests complete. Results outputted to 'log.txt'",GREEN);
+}
+
+copyDirectory(Directory from, Directory to){
+    var ps = Platform.pathSeparator;
+    if(!from.existsSync()) return;
+    if(!to.existsSync()) to.createSync();
+    for(var item in from.listSync()){
+        if(item is Directory){
+            copyDirectory(item, new Directory(to.path+ps+item.path.split(ps).last));
+        }else if(item is File){
+            item.copySync(to.path+ps+item.path.split(ps).last);
+        }
     }
 }
 
@@ -289,10 +350,10 @@ class IOTarget extends TestTarget{
                         [var preCommand, var postCommand]):super(name){
         test = (){
             if(input is File){
-                input = input.readAsStringSync();
+                input = input.readAsStringSync().replaceAll("\r\n","\n");
             }
             if(output is File){
-                output = output.readAsStringSync();
+                output = output.readAsStringSync().replaceAll("\r\n","\n");
             }
             if(preCommand!=null){
                 if(preCommand is String) runCommand(preCommand);
@@ -308,9 +369,7 @@ class IOTarget extends TestTarget{
             }
             new File(".tempscript.dart").writeAsStringSync('''"""+io_script+r"""''');
             String out = Process.runSync('dart',['.tempscript.dart']).stdout;
-            if(Platform.isWindows){
-                out = out.replaceAll("\r\n","\n");
-            }
+            out = out.replaceAll("\r\n","\n");
             if(postCommand!=null){
                 if(postCommand is String) runCommand(postCommand);
                 else{
@@ -457,7 +516,7 @@ const String GREEN = "green";
 const String RED = "red";
 const String BLUE = "blue";
 
-Function yesprint = (String str, [String type=PLAIN]){
+Function print = (String str, [String type=PLAIN]){
     if(type==PLAIN||Platform.isWindows){
         stdout.writeln(str);
     }else if(type==RED){
@@ -468,10 +527,6 @@ Function yesprint = (String str, [String type=PLAIN]){
         stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
     }
 };
-
-Function print = yesprint;
-
-Function noprint = (String str){};
 """;
 
 class Base64 {
