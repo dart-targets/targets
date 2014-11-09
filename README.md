@@ -20,8 +20,6 @@ Once you've completed your assignment template, push it to a new GitHub reposito
 
 Students can run the tests on their assignment with `targets check` and submit with `targets submit` (after first running `targets setup`). Student submissions are validated with a Google account (the primary email of the account must match the one their enter in `targets setup`). 
 
-Submission is active, but the submission viewer isn't fully set up yet. I intend to offer submission free of charge for the time being, with submissions deleted after 30 days. I may have to change this policy in the future depending on demand.
-
 Submissions are made to the GitHub user or organization name set in the `owner` variable of `tests.dart`. Once submissions have been uploaded, you can view and download them [here](http://darttargets.com/results) by logging into your GitHub account.
 
 Once you download a zip of submissions, you can run tests on all them with `targets batch`. Just put a `tests.dart` file (ideally, this should include different tests from what you provide in the template to ensure students don't just write code to pass the tests) in a folder called `targets` within the extracted zip file. `targets batch` will output a log of tests on all submissions to `log.txt`.
