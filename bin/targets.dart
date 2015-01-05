@@ -2,8 +2,9 @@
 
 import 'dart:io';
 import 'dart:convert';
+import 'dart:async';
 
-const String VERSION = "0.3.0";
+const String VERSION = "0.4.0";
 
 void main(var args){
     if(Platform.isWindows){
@@ -181,31 +182,82 @@ submit(bool manual){
                 String id = lines[0].split(":")[1].trim();
                 lines.removeAt(0);
                 lines.removeLast();
-                String infoString = Base64.encode(info.readAsStringSync());
+                String basicInfo = info.readAsStringSync();
+                String email = basicInfo.split("\n")[1];
+                String enc_email = Base64.encode(email);
+                String infoString = Base64.encode(basicInfo);
                 String data = "$owner;$id;";
                 for(String line in lines){
                     line = line.trim();
-                    data += line+","+Base64.encode(new File(line).readAsStringSync())+"|";
+                    if(line.startsWith("*.")){
+                        String extension = line.substring(1);
+                        List<File> files = getFilesWithExtension(extension);
+                        for(File f in files){
+                            String relpath = f.path.substring(Directory.current.path.length+1);
+                            String filedata = f.readAsStringSync();
+                            data += relpath+","+Base64.encode(filedata)+"|";
+                        }
+                    }else{
+                        String filedata = new File(line).readAsStringSync();
+                        data += line+","+Base64.encode(filedata)+"|";
+                    }
                 }
                 data = data.substring(0,data.length-1) + ";" + infoString;
                 String fullData = Base64.encode(data).replaceAll("\r\n","");
-                String url = "http://darttargets.com/submit?data="+fullData;
-                if(manual){
-                    print("Please paste the following URL into your browser:",BLUE);
-                    print(url);
-                }else if(Platform.isMacOS){
-                    Process.start('open',[url]);
-                    print("If your browser does not open, try 'targets manual-submit'", BLUE);
-                }else if(Platform.isLinux){
-                    Process.start('xdg-open',[url]);
-                    print("If your browser does not open, try 'targets manual-submit'", BLUE);
-                }else if(Platform.isWindows){
-                    Process.run('start',[url],runInShell:true);
-                    print("If your browser does not open, try 'targets manual-submit'", BLUE);
-                }
+                HttpClient client = new HttpClient();
+                print("Uploading submission...");
+                client.postUrl(Uri.parse("http://darttargets.com/submit/tempsubmit.php"))
+                    .then((HttpClientRequest request) {
+                        request.headers.contentType = ContentType.TEXT;
+                        request.headers.contentLength = fullData.length;
+                        request.write(fullData);
+                        return request.close();
+                      }).then(( HttpClientResponse res ) {
+                        res.transform(UTF8.decoder).listen((contents) {
+                            print(contents);
+                            String url = "http://darttargets.com/validate/?owner=$owner&project=$id&identifier=$enc_email";
+                            if(manual){
+                                print("Please paste the following URL into your browser:",BLUE);
+                                print(url);
+                            }else if(Platform.isMacOS){
+                                Process.start('open',[url]);
+                                print("If your browser does not open, try 'targets manual-submit'", BLUE);
+                            }else if(Platform.isLinux){
+                                Process.start('xdg-open',[url]);
+                                print("If your browser does not open, try 'targets manual-submit'", BLUE);
+                            }else if(Platform.isWindows){
+                                Process.run('start',[url],runInShell:true);
+                                print("If your browser does not open, try 'targets manual-submit'", BLUE);
+                            }
+                            new Future.delayed(new Duration(seconds:2),()=>exit(0));
+                        });
+                      });
             }
         });
     }
+}
+
+List<File> getFilesWithExtension(String extension){
+    List<File> files = allFilesInDirectory(Directory.current);
+    List<File> goodFiles = [];
+    for(File f in files){
+        if(f.path.endsWith(extension)) goodFiles.add(f);
+    }
+    return goodFiles;
+}
+
+List<File> allFilesInDirectory(Directory dir){
+    List<File> files = [];
+    if(dir.path==Directory.current.path+"/targets") return files;
+    var directs = dir.listSync();
+    for(var dir in directs){
+        if(dir is Directory){
+            files.addAll(allFilesInDirectory(dir));
+        }else{
+            files.add(dir);
+        }
+    }
+    return files;
 }
 
 batch(){

@@ -1,3 +1,7 @@
+#### 0.4.0
+  * Fixed issue with submitting large amounts of data with `targets submit`
+  * Added option to submit all files of a certain type (include "*.extension" as on the strings in the `files` list in your `tests.dart` file)
+
 #### 0.3.0
   * Added `targets batch` command, which allows for testing multiple submisssions at once.
   * Improved documentation
