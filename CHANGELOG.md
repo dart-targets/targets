@@ -1,3 +1,6 @@
+#### 0.4.1
+  * Fixes bug with browser opening on submit on Windows introduced in 0.4.0
+
 #### 0.4.0
   * Fixed issue with submitting large amounts of data with `targets submit`
   * Added option to submit all files of a certain type (include "*.extension" as on the strings in the `files` list in your `tests.dart` file)

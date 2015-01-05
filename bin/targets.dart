@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const String VERSION = "0.4.0";
+const String VERSION = "0.4.1";
 
 void main(var args){
     if(Platform.isWindows){
@@ -226,7 +226,7 @@ submit(bool manual){
                                 Process.start('xdg-open',[url]);
                                 print("If your browser does not open, try 'targets manual-submit'", BLUE);
                             }else if(Platform.isWindows){
-                                Process.run('start',[url],runInShell:true);
+                                Process.run('start',[url.replaceAll("&","^&")],runInShell:true);
                                 print("If your browser does not open, try 'targets manual-submit'", BLUE);
                             }
                             new Future.delayed(new Duration(seconds:2),()=>exit(0));
@@ -248,7 +248,7 @@ List<File> getFilesWithExtension(String extension){
 
 List<File> allFilesInDirectory(Directory dir){
     List<File> files = [];
-    if(dir.path==Directory.current.path+"/targets") return files;
+    if(dir.path==Directory.current.path+Platform.pathSeparator+"targets") return files;
     var directs = dir.listSync();
     for(var dir in directs){
         if(dir is Directory){
