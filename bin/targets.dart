@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const String VERSION = "0.4.1";
+const String VERSION = "0.5.0-experimental";
 
 void main(var args){
     if(Platform.isWindows){
@@ -23,6 +23,7 @@ void main(var args){
         print("   get <assignment>  Downloads assignment with name from GitHub");
         print("   check             Runs tests on assignment");
         print("   submit            Submits assignment to server");
+        print("   gui               Opens targets web interface");
         print("");
         print("Teacher Commands:");
         print("   init              Downloads template from GitHub");
@@ -54,7 +55,93 @@ void main(var args){
         }
     }else if(args[0]=="batch"){
         batch();
+    }else if(args[0]=="gui"){
+        if(args.length == 1){
+            runGuiServer(7620);
+        }else runGuiServer(int.parse(args[1]));
+    }else if(args[0]=="gui-server"){
+        if(args.length == 1){
+            runGuiServer(7620, false);
+        }else runGuiServer(int.parse(args[1]), false);
     }
+}
+
+String wd = Directory.current.path;
+HttpServer server;
+
+runGuiServer(port, [browser=true]){
+    HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
+        server = newServer;
+        print("Connect to ws://localhost:$port at darttargets.com/gui",GREEN);
+        print("This process must remain running for the GUI to work.");
+        if(browser) openBrowser("http://darttargets.com/gui");
+        server.listen((HttpRequest request) {
+            if (WebSocketTransformer.isUpgradeRequest(request)){
+                WebSocketTransformer.upgrade(request).then(handleSocket);
+            }
+            else {
+                request.response.statusCode = HttpStatus.FORBIDDEN;
+                request.response.reasonPhrase = "Please connect from darttargets.com/gui";
+                request.response.close();
+            }
+        });
+    });
+}
+
+var lastSocket;
+
+void handleSocket(WebSocket socket){
+    if(lastSocket!=null){
+        lastSocket.add(JSON.encode({'type':'newclient'}));
+    }
+    lastSocket = socket;
+    var serverPrint = (String str, [String type=PLAIN]){
+        if(type==PLAIN||Platform.isWindows){
+            stdout.writeln(str);
+        }else if(type==RED){
+            stdout.writeln("\u001b[0;31m"+str+"\u001b[0;0m");
+        }else if(type==GREEN){
+            stdout.writeln("\u001b[0;32m"+str+"\u001b[0;0m");
+        }else if(type==BLUE){
+            stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
+        }
+    };
+    var clientPrint = (str, [type=PLAIN]) => socket.add(JSON.encode({'type':'log','text':str}));
+    print = clientPrint;
+    socket.listen((String s) {
+        var map = JSON.decode(s);
+        String command = map['command'];
+        wd = map['workingDirectory'];
+        if(command == 'submit'){
+            submit(false, withInfo:map['info'], callback:(url){
+                socket.add(JSON.encode({'type':'submit','url':url}));
+            });
+        }else if(command == 'get'){
+            getAssignment(map['id'], false);
+        }else if(command == 'check'){
+            checkAssign();
+        }else if(command == 'update'){
+            serverPrint("Update triggered. Server about to close...");
+            serverPrint(Process.runSync('pub',['global','activate','targets']).stdout);
+            socket.add(JSON.encode({'type':'reboot'}));
+            new Future.delayed(new Duration(milliseconds:2000),(){
+                server.close(force:true);
+                serverPrint("Starting new instance...");
+                Process.start('targets',['gui-server']).then((process) {
+                    process.stdout.transform(new Utf8Decoder())
+                            .transform(new LineSplitter()).listen((String line){
+                        serverPrint(line);
+                    });
+                });
+            });
+        }
+    },onDone: () {
+        print = serverPrint;
+    });
+    socket.add(JSON.encode({'type':'init',
+        'workingDirectory':Directory.current.path,
+        'version':VERSION
+    }));
 }
 
 String HOME;
@@ -81,11 +168,11 @@ setup(){
 }
 
 checkAssign(){
-    if(!new File("targets/tester.dart").existsSync()){
+    if(!new File("$wd/targets/tester.dart").existsSync()){
         print("You are not in an assignment directory!",RED);
         return;
     }
-    Process.start("dart",['targets/tester.dart']).then((process) {
+    Process.start("dart",['targets/tester.dart'], workingDirectory:wd).then((process) {
         process.stdout.transform(new Utf8Decoder())
                 .transform(new LineSplitter())
                 .listen((String line){
@@ -129,16 +216,16 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner, String oldOwner
                 .listen((String line){
                     if(line.contains("refs/heads/master")){
                         if(!isTeacher)print("Found assignment. Downloading...",BLUE);
-                        Process.start("git",['clone',url]).then((prc) {
+                        Process.start("git",['clone','--depth', '1',url, id],
+                                workingDirectory:wd).then((prc) {
                             prc.exitCode.then((ec){
-                                new Directory("targets-$id").renameSync(id);
-                                File testerFile = new File("$id/targets/tester.dart");
-                                File helperFile = new File("$id/targets/helpers.dart");
+                                File testerFile = new File("$wd/$id/targets/tester.dart");
+                                File helperFile = new File("$wd/$id/targets/helpers.dart");
                                 testerFile.writeAsStringSync(tester_dart);
                                 helperFile.writeAsStringSync(helpers_dart);
-                                new Directory("$id/.git").deleteSync(recursive: true);
+                                new Directory("$wd/$id/.git").deleteSync(recursive: true);
                                 if(!isTeacher){
-                                    File tests = new File("$id/targets/tests.dart");
+                                    File tests = new File("$wd/$id/targets/tests.dart");
                                     var lines = tests.readAsLinesSync();
                                     String text = "";
                                     for(String str in lines){
@@ -162,14 +249,15 @@ gitLoad(String url, String id, bool isTeacher, [String newOwner, String oldOwner
     });
 }
 
-submit(bool manual){
+submit(bool manual, {String withInfo:null, callback:null}){
     File info = new File("$HOME/.targets");
-    if(!info.existsSync()){
+    if(!info.existsSync()&&withInfo==null){
         print("You need to run 'targets setup' first!",RED);
-    }else if(! new File("targets/tester.dart").existsSync()){
+    }else if(! new File("$wd/targets/tester.dart").existsSync()){
         print("You are not in an assignment directory!",RED);
     }else{
-        Process.run('dart', ['targets/tester.dart','submit']).then((ProcessResult results) {
+        Process.run('dart', ['targets/tester.dart','submit'], 
+                workingDirectory:wd).then((ProcessResult results) {
             List<String> lines = results.stdout.split("\n");
             if(lines[0].contains("Unhandled exception:")){
                 print("Assignment is corrupted. Redownload or contact your teacher.",RED);
@@ -182,7 +270,10 @@ submit(bool manual){
                 String id = lines[0].split(":")[1].trim();
                 lines.removeAt(0);
                 lines.removeLast();
-                String basicInfo = info.readAsStringSync();
+                String basicInfo;
+                if(withInfo==null){
+                    basicInfo = withInfo;
+                }else basicInfo = info.readAsStringSync();
                 String email = basicInfo.split("\n")[1];
                 String enc_email = Base64.encode(email);
                 String infoString = Base64.encode(basicInfo);
@@ -198,7 +289,7 @@ submit(bool manual){
                             data += relpath+","+Base64.encode(filedata)+"|";
                         }
                     }else{
-                        String filedata = new File(line).readAsStringSync();
+                        String filedata = new File(wd+"/"+line).readAsStringSync();
                         data += line+","+Base64.encode(filedata)+"|";
                     }
                 }
@@ -216,20 +307,18 @@ submit(bool manual){
                         res.transform(UTF8.decoder).listen((contents) {
                             print(contents);
                             String url = "http://darttargets.com/validate/?owner=$owner&project=$id&identifier=$enc_email";
-                            if(manual){
-                                print("Please paste the following URL into your browser:",BLUE);
-                                print(url);
-                            }else if(Platform.isMacOS){
-                                Process.start('open',[url]);
-                                print("If your browser does not open, try 'targets manual-submit'", BLUE);
-                            }else if(Platform.isLinux){
-                                Process.start('xdg-open',[url]);
-                                print("If your browser does not open, try 'targets manual-submit'", BLUE);
-                            }else if(Platform.isWindows){
-                                Process.run('start',[url.replaceAll("&","^&")],runInShell:true);
-                                print("If your browser does not open, try 'targets manual-submit'", BLUE);
+                            if(callback == null){
+                                if(manual){
+                                    print("Please paste the following URL into your browser:",BLUE);
+                                    print(url);
+                                }else {
+                                    openBrowser(url);
+                                    print("If your browser does not open, try 'targets manual-submit'", BLUE);
+                                }
+                                new Future.delayed(new Duration(seconds:2),()=>exit(0));
+                            }else{
+                                callback(url);
                             }
-                            new Future.delayed(new Duration(seconds:2),()=>exit(0));
                         });
                       });
             }
@@ -237,8 +326,18 @@ submit(bool manual){
     }
 }
 
+openBrowser(url){
+    if(Platform.isMacOS){
+        Process.start('open', [url]);
+    }else if(Platform.isLinux){
+        Process.start('x-www-browser', [url]);
+    }else if(Platform.isWindows){
+        Process.start('explorer', [url]);
+    }
+}
+
 List<File> getFilesWithExtension(String extension){
-    List<File> files = allFilesInDirectory(Directory.current);
+    List<File> files = allFilesInDirectory(new Directory(wd));
     List<File> goodFiles = [];
     for(File f in files){
         if(f.path.endsWith(extension)) goodFiles.add(f);
@@ -248,7 +347,7 @@ List<File> getFilesWithExtension(String extension){
 
 List<File> allFilesInDirectory(Directory dir){
     List<File> files = [];
-    if(dir.path==Directory.current.path+Platform.pathSeparator+"targets") return files;
+    if(dir.path==wd+Platform.pathSeparator+"targets") return files;
     var directs = dir.listSync();
     for(var dir in directs){
         if(dir is Directory){

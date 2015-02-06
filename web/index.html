@@ -1,0 +1,147 @@
+<!doctype html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Targets Student Console</title>
+    <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+    <style>
+        body{
+            font-family:'Montserrat',sans-serif;
+            font-size:110%;
+            background-color:#23241f;
+            color:#fff;
+        }
+        h2{
+            margin:0.2em;
+            margin-left:0.5em;
+        }
+        input{
+            font-size:14pt;
+            border-radius:4px;
+            font-family:'Montserrat',sans-serif;
+            margin:4px;
+        }
+        #topbar{
+            background:#57f;
+            position:fixed;
+            top:0;
+            left: 0;
+            width:100%;
+            height:45px;
+        }
+        #content{
+            margin-top:55px;
+            margin-left:4px;
+        }
+
+        .button{
+            margin-top:4px;
+            padding-top:4px;
+            padding-bottom:4px;
+            padding-right:8px;
+            padding-left:8px;
+            border-radius:4px;
+            background-color:#57f;
+            display:inline-block;
+        }
+
+        .button:hover{
+            background-color:#79f;
+        }
+
+        .noselect, .button {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        #connection, #controls, #validate{
+            display:none;
+        }
+        #main, #log{
+            display:inline-block;
+            height:100%;
+            vertical-align: top;
+        }
+        #iframe{
+            border:none;
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+        }
+        #exitframe{
+            position:absolute;
+            top:8px;
+            right:8px;
+            z-index:100;
+        }
+        #update{
+            background:#fff;
+            color:#57f;
+            display:inline-block;
+        }
+        #update:hover{
+            background:#79f;
+            color:#fff;
+        }
+        #version{
+            color:#fff;
+            display:inline-block;
+        }
+        #versionUpdate{
+            position:fixed;
+            right:8px;
+            top:4px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="topbar">
+<h2>Targets Student Console</h2>
+</div>
+<div id="versionUpdate">
+<div id="version">Checking version...</div>&nbsp;
+<div class="button" id="update">Update</div>
+</div>
+<div id="content">
+    <div id="main">
+    <div id="connection">
+        Address: <input id="server_input" type="text" value="ws://localhost:7620" /><br>
+        <div class="button" id="connect">Connect</div><br><br>
+    </div>
+    <div id="controls">
+        Working Directory: <input id="dir_input" type="text" value="" /><br>
+        <br>
+        Teacher ID: <input id="teacher_input" type="text" value="" /><br>
+        Assignment ID: <input id="assignment_input" type="text" value="" /><br>
+        <div class="button" id="download">Download</div>&nbsp;
+        <div class="button" id="runtests">Run Tests</div><br>
+        <br>
+        Full Name: <input id="name_input" type="text" value="" /><br>
+        Email: <input id="email_input" type="text" value="" /><br>
+        Student ID (optional): <input id="sid_input" type="text" value="" /><br>
+        <div class="button" id="submit">Submit Assignment</div><br><br>
+    </div>
+    </div>
+    <div id="log">
+        Attempting default connection... 
+    </div>
+    <div id="validate">
+        <div class="button" id="exitframe">Close</div>
+        <iframe frameborder"0" id="iframe" width="100%" height="100%" borderless>
+            Somehow, your browser supports web sockets but not iframes, so something is seriously wrong.
+        </iframe>
+    </div>
+</div>
+<script type="application/dart" src="main.dart"></script>
+<script data-pub-inline src="packages/browser/dart.js"></script>
+</body>
+</html>
