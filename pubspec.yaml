@@ -1,7 +1,7 @@
 name: targets
 author: Jack Thakar <jack@jackthakar.com>
 homepage: http://github.com/dart-targets/targets
-version: 0.4.2
+version: 0.5.0-testing
 description: Simple assignment manager and autograder for Dart
 executables:
     targets: targets
