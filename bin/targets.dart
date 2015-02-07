@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const String VERSION = "0.5.0-testing";
+const String VERSION = "0.5.0";
 
 void main(var args){
     if(Platform.isWindows){
