@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const String VERSION = "0.5.0";
+const String VERSION = "0.5.1";
 
 void main(var args){
     if(Platform.isWindows){
@@ -58,24 +58,30 @@ void main(var args){
     }else if(args[0]=="gui"){
         if(args.length == 1){
             runGuiServer(7620);
-        }else if(args.length == 3){
-            runGuiServer(7620, url:args[2]);
+        }else if(args.length >= 3){
+            runGuiServer(int.parse(args[1]), url:args[2]);
         }else runGuiServer(int.parse(args[1]));
     }else if(args[0]=="gui-server"){
         if(args.length == 1){
             runGuiServer(7620, browser: false);
+        }else if(args.length >= 3){
+            runGuiServer(int.parse(args[1]), browser:false, url:args[2]);
         }else runGuiServer(int.parse(args[1]), browser: false);
     }
 }
 
 String wd = Directory.current.path;
 HttpServer server;
+int currentPort;
+String currentUrl;
 
 const String DEFAULT_URL = "http://darttargets.com/gui";
 
 runGuiServer(port, {browser:true, url: DEFAULT_URL}){
     HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
+        currentPort = port;
+        currentUrl = url;
         if(port!=7620&&url==DEFAULT_URL) url += "?port=$port";
         print("Connect to ws://localhost:$port at ${url.substring(7)}",GREEN);
         print("This process must remain running for the GUI to work.");
@@ -132,7 +138,7 @@ void handleSocket(WebSocket socket){
             new Future.delayed(new Duration(milliseconds:2000),(){
                 server.close(force:true);
                 serverPrint("Starting new instance...");
-                Process.start('targets',['gui-server']).then((process) {
+                Process.start('targets',['gui-server', '$currentPort', currentUrl], runInShell:true).then((process) {
                     process.stdout.transform(new Utf8Decoder())
                             .transform(new LineSplitter()).listen((String line){
                         serverPrint(line);
