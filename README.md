@@ -36,6 +36,16 @@ Targets is primarily designed to test code written in Dart. However, version 0.2
 
 For obvious reasons, `IOTarget` is not supported by the web grader, though `targets batch` should work fine.
 
+### Web Interface ###
+
+Since targets is primarily intended for high school CS courses (there's much better software out there for universities), you may not want your students to have to access targets from the command line, both because command line programs can be daunting to high school students and because your school's IT department may not want to provide command line access to students.
+
+To allow student use of targets outside of the command line, version 0.5.0 adds the `targets gui` command. This starts a local web socket server on the student's machine and opens their web browser to [darttargets.com/gui](http://darttargets.com/gui). From here, students can download assignments, run tests, and submit their work without touching the command line. There's even a button to upgrade targets through pub (though this may not work on all setups).
+
+By default, the local server is hosted on port 7620 (fun fact: this number was reached by adding the ASCII codes of the letters in "targets" and multiplying by 10). You can customize it with `targets gui #`, where # is your preferred port. If using the default interface URL, the default port will automatically be changed in the page that launches by adding "?port=#" to the end.
+
+The source of the web interface is included in the pub package and on GitHub if you want to customize it. To have Targets launch your new version, use `targets gui # http://yourinterface.com`. You can put your custom in a shell script to allow your students to launch the interface with one click.
+
 ### Installing ###
 
 You can install targets with:

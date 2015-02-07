@@ -1,3 +1,9 @@
+#### 0.5.0
+  * Adds student GUI to targets, launched with `targets gui`
+  * This runs a local web socket server and opens [darttargets.com/gui](http://darttargets.com/gui) in your browser
+  * The web interface connects to the local web socket server to allow easy access to student commands without using the terminal (you could write a simple script to run `targets gui`)
+  * Minor improvements to downloading templates with git
+
 #### 0.4.1
   * Fixes bug with browser opening on submit on Windows introduced in 0.4.0
 

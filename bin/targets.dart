@@ -58,23 +58,28 @@ void main(var args){
     }else if(args[0]=="gui"){
         if(args.length == 1){
             runGuiServer(7620);
+        }else if(args.length == 3){
+            runGuiServer(7620, url:args[2]);
         }else runGuiServer(int.parse(args[1]));
     }else if(args[0]=="gui-server"){
         if(args.length == 1){
-            runGuiServer(7620, false);
-        }else runGuiServer(int.parse(args[1]), false);
+            runGuiServer(7620, browser: false);
+        }else runGuiServer(int.parse(args[1]), browser: false);
     }
 }
 
 String wd = Directory.current.path;
 HttpServer server;
 
-runGuiServer(port, [browser=true]){
+const String DEFAULT_URL = "http://darttargets.com/gui";
+
+runGuiServer(port, {browser:true, url: DEFAULT_URL}){
     HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
-        print("Connect to ws://localhost:$port at darttargets.com/gui",GREEN);
+        if(port!=7620&&url==DEFAULT_URL) url += "?port=$port";
+        print("Connect to ws://localhost:$port at ${url.substring(7)}",GREEN);
         print("This process must remain running for the GUI to work.");
-        if(browser) openBrowser("http://darttargets.com/gui");
+        if(browser) openBrowser(url);
         server.listen((HttpRequest request) {
             if (WebSocketTransformer.isUpgradeRequest(request)){
                 WebSocketTransformer.upgrade(request).then(handleSocket);

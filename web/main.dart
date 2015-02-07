@@ -31,7 +31,7 @@ var versionText = querySelector("#version");
 
 main(){
     initFields();
-    connect("ws://localhost:7620");
+    connect(serverInput.defaultValue);
     connectButton.onClick.listen((e){
         log("Connecting...",true);
         connect(serverInput.value);
