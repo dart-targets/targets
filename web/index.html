@@ -18,12 +18,6 @@
             margin:0.2em;
             margin-left:0.5em;
         }
-        input{
-            font-size:14pt;
-            border-radius:4px;
-            font-family:'Montserrat',sans-serif;
-            margin:4px;
-        }
         #topbar{
             background:#57f;
             position:fixed;
@@ -100,7 +94,19 @@
             right:8px;
             top:4px;
         }
-
+        #controls{
+            width:100%;
+            max-width:500px;
+            padding-right:50px;
+        }
+        input{
+            width:100%;
+            max-width:425px;
+            font-size:14pt;
+            border-radius:4px;
+            font-family:'Montserrat',sans-serif;
+            margin:4px;
+        }
     </style>
 </head>
 <body>
@@ -118,7 +124,8 @@
         <div class="button" id="connect">Connect</div><br><br>
     </div>
     <div id="controls">
-        Working Directory: <input id="dir_input" type="text" value="" /><br>
+        Working Directory:<br>
+        <input id="dir_input" type="text" value="" /><br>
         <br>
         Teacher ID: <input id="teacher_input" type="text" value="" /><br>
         Assignment ID: <input id="assignment_input" type="text" value="" /><br>

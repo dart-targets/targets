@@ -1,1 +1,5 @@
-build/
+build
+packages
+bin/packages
+web/packages
+pubspec.lock

@@ -271,7 +271,7 @@ submit(bool manual, {String withInfo:null, callback:null}){
                 lines.removeAt(0);
                 lines.removeLast();
                 String basicInfo;
-                if(withInfo==null){
+                if(withInfo!=null){
                     basicInfo = withInfo;
                 }else basicInfo = info.readAsStringSync();
                 String email = basicInfo.split("\n")[1];

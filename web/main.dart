@@ -30,6 +30,7 @@ var versionText = querySelector("#version");
 
 
 main(){
+    initFields();
     connect("ws://localhost:7620");
     connectButton.onClick.listen((e){
         log("Connecting...",true);
@@ -42,6 +43,21 @@ main(){
     exitframeButton.onClick.listen((e){
         validateDiv.style.display="none";
     });
+
+}
+
+initFields(){
+    nameInput.value = window.localStorage['name'];
+    emailInput.value = window.localStorage['email'];
+    teacherInput.value = window.localStorage['teacher'];
+    assignmentInput.value = window.localStorage['assignment'];
+    sidInput.value = window.localStorage['sid'];
+
+    nameInput.onChange.listen((e)=>window.localStorage['name']=nameInput.value);
+    emailInput.onChange.listen((e)=>window.localStorage['email']=emailInput.value);
+    teacherInput.onChange.listen((e)=>window.localStorage['teacher']=teacherInput.value);
+    assignmentInput.onChange.listen((e)=>window.localStorage['assignment']=assignmentInput.value);
+    sidInput.onChange.listen((e)=>window.localStorage['sid']=sidInput.value);
 }
 
 update(){
@@ -110,8 +126,6 @@ connect(String server, [onConnected]){
             }
             versionText.innerHtml = "Version "+map['version'];
         }else if(map['type']=='submit'){
-            //querySelector("#link").attributes['href'] = map['url'];
-            //querySelector("#link").click();
             iframe.src = map['url'];
             validateDiv.style.display = "inline-block";
         }else if(map['type']=='reboot'){
