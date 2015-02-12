@@ -1,3 +1,8 @@
+#### 0.5.2
+  * Improved IOTarget.makeJava
+  * **Breaks existing use of IOTarget.makeJava**
+  * Adds additional helpers in IOTarget
+
 #### 0.5.1
   * Fixes bugs with updating through the student GUI
 
