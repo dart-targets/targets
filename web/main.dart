@@ -22,6 +22,7 @@ var downloadButton = querySelector("#download");
 var submitButton = querySelector("#submit");
 var exitframeButton = querySelector("#exitframe");
 var updateButton = querySelector("#update");
+var githubButton = querySelector("#github");
 
 var iframe = querySelector("#iframe");
 var validateDiv = querySelector("#validate");
@@ -38,6 +39,7 @@ main(){
     });
     runtestsButton.onClick.listen((e)=>runTests());
     downloadButton.onClick.listen((e)=>download());
+    githubButton.onClick.listen((e)=>github());
     submitButton.onClick.listen((e)=>submit());
     updateButton.onClick.listen((e)=>update());
     exitframeButton.onClick.listen((e){
@@ -91,6 +93,14 @@ download(){
         log("Sending command to Targets...",true);
         socket.send(JSON.encode(data));
     }
+}
+
+github(){
+    var user = teacherInput.value;
+    if(user.contains(":")) user = user.split(":")[1];
+    var project = assignmentInput.value;
+    var url = "https://github.com/$user/targets-$project";
+    window.open(url, '_blank');
 }
 
 submit(){
