@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const String VERSION = "0.5.0";
+const String VERSION = "0.5.2";
 
 void main(var args){
     if(Platform.isWindows){
@@ -58,24 +58,30 @@ void main(var args){
     }else if(args[0]=="gui"){
         if(args.length == 1){
             runGuiServer(7620);
-        }else if(args.length == 3){
-            runGuiServer(7620, url:args[2]);
+        }else if(args.length >= 3){
+            runGuiServer(int.parse(args[1]), url:args[2]);
         }else runGuiServer(int.parse(args[1]));
     }else if(args[0]=="gui-server"){
         if(args.length == 1){
             runGuiServer(7620, browser: false);
+        }else if(args.length >= 3){
+            runGuiServer(int.parse(args[1]), browser:false, url:args[2]);
         }else runGuiServer(int.parse(args[1]), browser: false);
     }
 }
 
 String wd = Directory.current.path;
 HttpServer server;
+int currentPort;
+String currentUrl;
 
 const String DEFAULT_URL = "http://darttargets.com/gui";
 
 runGuiServer(port, {browser:true, url: DEFAULT_URL}){
     HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
+        currentPort = port;
+        currentUrl = url;
         if(port!=7620&&url==DEFAULT_URL) url += "?port=$port";
         print("Connect to ws://localhost:$port at ${url.substring(7)}",GREEN);
         print("This process must remain running for the GUI to work.");
@@ -132,7 +138,7 @@ void handleSocket(WebSocket socket){
             new Future.delayed(new Duration(milliseconds:2000),(){
                 server.close(force:true);
                 serverPrint("Starting new instance...");
-                Process.start('targets',['gui-server']).then((process) {
+                Process.start('targets',['gui-server', '$currentPort', currentUrl], runInShell:true).then((process) {
                     process.stdout.transform(new Utf8Decoder())
                             .transform(new LineSplitter()).listen((String line){
                         serverPrint(line);
@@ -542,20 +548,6 @@ class IOTarget extends TestTarget{
         };
     }
 
-    static IOTarget makeJava(String name, String mainClass, String input, 
-                        String output, [List<String> otherClasses]){
-        List<String> pre = ["javac $mainClass.java"];
-        List<String> post = ["rm $mainClass.class"];
-        String command = "java $mainClass";
-        if(otherClasses != null){
-            for(String str in otherClasses){
-                pre.add("javac $str.java");
-                post.add("rm $str.class");
-            }
-        }
-        return new IOTarget(name, command, input, output, pre, post);
-    }
-
     runCommand(String command){
         var parts = command.split(" ");
         var exe = parts.removeAt(0);
@@ -564,6 +556,62 @@ class IOTarget extends TestTarget{
         }
         Process.runSync(exe, parts, runInShell:true);
     }
+
+    /// Generates a single IOTarget for a Java program
+    static IOTarget makeJava(String mainClass, InputOutput io){
+        String pre = "javac $mainClass.java";
+        String command = "java $mainClass";
+        if(io.args != null) command += " ${io.args}";
+        return new IOTarget(io.name, command, input, output, pre);
+    }
+
+    /// Generates multiple IOTargets for a single Java program
+    /// Only compiles when the first target is run
+    static List<IOTarget> makeMultiJava(String mainClass, List<InputOutput> ios){
+        List<IOTarget> targets = [];
+        for(InputOutput io in ios){
+            String pre = null;
+            if(targets.length==0) pre = "javac $mainClass.java";
+            String command = "java $mainClass";
+            if(io.args!=null) command += " ${io.args}";
+            targets.add(new IOTarget(io.name, command, io.input, io.output, pre));
+        }
+        return targets;
+    }
+
+    /// (e.g.) make("python3 square.py", new InputOutput("Test","4","16"))
+    static IOTarget make(String command, InputOutput io){
+        if(io.args != null) command += "${io.args}";
+        return new IOTarget(io.name, command, io.input, io.output);
+    }
+
+    static List<IOTarget> makeMulti(String command, List<InputOutput> ios){
+        List<IOTarget> targets = [];
+        for(InputOutput io in ios){
+            targets.add(make(command, io));
+        }
+        return targets;
+    }
+}
+
+/// This class is used to represent some combination
+/// of arguments, input, and expected output
+class InputOutput{
+    /// These can be Strings or Files
+    var input = "";
+    var output;
+
+    /// This is arguments on the command, separated by spaces
+    String args;
+
+    /// This is the name of the test for this InputOutput
+    String name;
+
+    InputOutput(this.name, this.input, this.output);
+
+    InputOutput.withArgsInput(this.name, this.args, this.input, this.output);
+
+    InputOutput.withArgs(this.name, this.args, this.output);
 }""";
 
 /// Used by IOTarget in helpers.dart

@@ -1,3 +1,11 @@
+#### 0.5.2
+  * Improved IOTarget.makeJava
+  * **Breaks existing use of IOTarget.makeJava**
+  * Adds additional helpers in IOTarget
+
+#### 0.5.1
+  * Fixes bugs with updating through the student GUI
+
 #### 0.5.0
   * Adds student GUI to targets, launched with `targets gui`
   * This runs a local web socket server and opens [darttargets.com/gui](http://darttargets.com/gui) in your browser
