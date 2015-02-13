@@ -2,6 +2,8 @@
 
 Targets is an assignment manager and autograder for Dart programs intended for those who wish to use Dart to teach programming/CS. It uses GitHub to download assignment templates.
 
+This README describes the fundamentals of using Targets. [Full documentation](http://docs.darttargets.com) intended for teachers and students is also available, though it is currently a draft and is subject to change.
+
 `targets get example` downloads an example assignment from `https://github.com/dart-targets/targets-example`.
 
 You can download assignments you create with `targets get username/assignment` which would download from `https://github.com/username/targets-assignment`.
