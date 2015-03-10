@@ -1,3 +1,8 @@
+#### 0.6.0
+  * New `targets moss` command
+  * Allows teachers to send student code that's prepared for `targets batch` to [Moss][http://moss.stanford.edu] for similarity detection
+  * IOTargets now fail when any pre commands fail. This will ensure that students are notified about compile-errors in their code
+
 #### 0.5.2
   * Improved IOTarget.makeJava
   * **Breaks existing use of IOTarget.makeJava**

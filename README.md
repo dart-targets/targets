@@ -24,13 +24,15 @@ Students can run the tests on their assignment with `targets check` and submit w
 
 Submissions are made to the GitHub user or organization name set in the `owner` variable of `tests.dart`. Once submissions have been uploaded, you can view and download them [here](http://darttargets.com/results) by logging into your GitHub account.
 
-Once you download a zip of submissions, you can run tests on all them with `targets batch`. Just put a `tests.dart` file (ideally, this should include different tests from what you provide in the template to ensure students don't just write code to pass the tests) in a folder called `targets` within the extracted zip file. `targets batch` will output a log of tests on all submissions to `log.txt`.
-
-If you have template files that are required for your tests to run but aren't included in student submissions, you can put them in a folder called `template` within the extracted zip. You could actually download a full project template (with `targets get`) and then rename the folder to `template`, as, when a file exists both in a student submission and in `template`, the student submission is used.
+Once you download a zip of submissions, you can run tests on all them with `targets batch`. Just put a version of your assignment template with more rigorous tests into a folder called `template` within the extracted zip file. `targets batch` will output a log of tests on all submissions to `log.txt`.
 
 Additionally, if you open the submission viewer in Dartium, you can paste in code from a `tests.dart` file to run tests without downloading submissions. Please note that this feature works best with very simple assignments. When all code is in one file, it should work fine. It should theoretically work with multiple files, as long as they are all uploaded with students' submissions, but things may break. If the web grader does not work, just download the zip and use `targets batch`.
 
 For the time being, the submission service is free of charge. The server is running on "unlimited" shared hosting, so I shouldn't have any issues keeping it free, unless demand is such that I go beyond whatever my host deems "unlimited" to be. To keep the server lightweight, all submissions will be deleted after 30 days. Make sure to download the zip archive within that window or your students will have to resubmit.
+
+### Similarity Detection ###
+
+Starting in 0.6.0, Targets supports easy submission of student code to [Moss](http://moss.stanford.edu) for similarity detection. You can run `targets moss` on any set of student submissions that you can run `targets batch` on. Once you enter the command, you'll be prompted for the language your students' code is in, the file extension to submit, and your Moss account ID. In addition to student code, Targets will also upload code in `template` to Moss to improve accuracy by providing a baseline. Once Moss responds, your web browser will open with the results.
 
 ### Languages Other Than Dart ###
 

@@ -4,7 +4,9 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 
-const String VERSION = "0.5.2";
+import 'moss.dart' as Moss;
+
+const String VERSION = "0.6.0";
 
 void main(var args){
     if(Platform.isWindows){
@@ -29,6 +31,7 @@ void main(var args){
         print("   init              Downloads template from GitHub");
         print("   init <assignment> Downloads assignment from GitHub as template");
         print("   batch             Grades multiple submissions downloaded from server");
+        print("   moss              Submits submissions to Moss for similarity detection");
         print("");
         print("Teachers should upload completed templates with tests to GitHub");
         print("Repo url with form github.com/username/targets-project");
@@ -67,6 +70,10 @@ void main(var args){
         }else if(args.length >= 3){
             runGuiServer(int.parse(args[1]), browser:false, url:args[2]);
         }else runGuiServer(int.parse(args[1]), browser: false);
+    }else if(args[0]=="moss"){
+        if(args.length > 1&&args[1]=="help"){
+            Moss.help();
+        }else Moss.run();
     }
 }
 
@@ -506,6 +513,7 @@ class IOTarget extends TestTarget{
     /// output - Output (string or file) to match against command output
     /// preCommand - Command or list of commands to run
     ///             before passing in input
+    ///             If preCommand outputs anything to stderr, test fails
     /// postCommand - Command or list commands to run
     ///             after passing in input
     IOTarget(String name, String command, var input, var output, 
@@ -517,11 +525,17 @@ class IOTarget extends TestTarget{
             if(output is File){
                 output = output.readAsStringSync().replaceAll("\r\n","\n");
             }
+            var preErr = "";
             if(preCommand!=null){
-                if(preCommand is String) runCommand(preCommand);
-                else{
+                if(preCommand is String){
+                    preErr = runCommand(preCommand);
+                }else{
                     for(String str in preCommand) runCommand(str);
                 }
+            }
+            if(preErr.length > 0){
+                this.error = preErr;
+                return false;
             }
             var parts = command.split(" ");
             var exe = parts.removeAt(0);
@@ -554,12 +568,12 @@ class IOTarget extends TestTarget{
         if(exe=="rm"&&Platform.isWindows){
             exe = "del";
         }
-        Process.runSync(exe, parts, runInShell:true);
+        return Process.runSync(exe, parts, runInShell:true).stderr;
     }
 
     /// Generates a single IOTarget for a Java program
     static IOTarget makeJava(String mainClass, InputOutput io){
-        String pre = "javac $mainClass.java";
+        String pre = "javac -nowarn $mainClass.java";
         String command = "java $mainClass";
         if(io.args != null) command += " ${io.args}";
         return new IOTarget(io.name, command, input, output, pre);
