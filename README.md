@@ -8,6 +8,10 @@ This README describes the fundamentals of using Targets. [Full documentation](ht
 
 You can download assignments you create with `targets get username/assignment` which would download from `https://github.com/username/targets-assignment`.
 
+Starting in 0.7.0, Targets can download assignments from any zip archive that is publicly accessible on the web. Just use:
+
+    targets get assignment-name http://example.com/template.zip
+
 If you want to use an assignment someone else has created (but have submissions sent to you), add your username and a colon. `targets get userA:userB/assignment` downloads from `https://github.com/userB/targets-assignment` but alters the `tests.dart` file so that submissions are sent to `userA`.
 
 ### Creating Templates ###
@@ -17,6 +21,8 @@ To create a new assignment template, you can download a fully commented version 
 `targets init` works almost exactly the same as `targets get`, except that it leaves comments in the `tests.dart` file untouched. `//`, `/*`, and `/**` style comments are kept with either command, but unindented `///` comments are removed when using `targets get`. The `example` template includes many of these comments to explain the structure of `tests.dart`.
 
 Once you've completed your assignment template, push it to a new GitHub repository. The repo name should start with `targets-`. Students can then download your new assignment with `targets get user/id` when `user` is your GitHub username and `id` is everything after the `targets-` in your repo name.
+
+If you would prefer to keep your assignment templates private, you can instead put the template in a zip file (with the root of the template at the root of the zip) and share the URL with your students. Note that in this case, you cannot share the same zip with other teachers as Targets will not modify the owner property in `tests.dart`. If you want to share assignments, post them to GitHub (it also makes them easier for your students to download).
 
 ### Submission and Grading ###
 
@@ -46,6 +52,8 @@ Since targets is primarily intended for high school CS courses (there's much bet
 
 To allow student use of targets outside of the command line, version 0.5.0 adds the `targets gui` command. This starts a local web socket server on the student's machine and opens their web browser to [darttargets.com/gui](http://darttargets.com/gui). From here, students can download assignments, run tests, and submit their work without touching the command line. There's even a button to upgrade targets through pub (though this may not work on all setups).
 
+The web interface does not yet support download templates from a custom zip file, but it will soon. If you want to avoid sharing zip URLs with your students but don't want to (or can't) make your templates public, you may want to create a custom web console with the URLs prefilled for your class. You can hook into Targets' support for zip files with the command `get-zip` and arguments `id` and `url`.
+
 By default, the local server is hosted on port 7620 (fun fact: this number was reached by adding the ASCII codes of the letters in "targets" and multiplying by 10). You can customize it with `targets gui #`, where # is your preferred port. If using the default interface URL, the default port will automatically be changed in the page that launches by adding "?port=#" to the end.
 
 The source of the web interface is included in the pub package and on GitHub if you want to customize it. To have Targets launch your new version, use `targets gui # http://yourinterface.com`. You can put your custom in a shell script to allow your students to launch the interface with one click.
@@ -56,6 +64,6 @@ You can install targets with:
 
     pub global activate targets
 
-You may be prompted by pub to add a directory to your path. Obviously, Dart should also be on your path. Previous versions of Targets required Git to download assignment templates, but, starting in 0.6.1, templates are instead downloaded from the zip archive of the project that GitHub provides.
+You may be prompted by pub to add a directory to your path. Obviously, Dart should also be on your path. Previous versions of Targets required Git to download assignment templates, but, starting in 0.7.0, templates are instead downloaded from the zip archive of the project that GitHub provides.
 
 The code is available on [GitHub](https://github.com/dart-targets/targets) under the revised BSD license.

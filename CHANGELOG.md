@@ -1,5 +1,6 @@
-#### 0.6.1
+#### 0.7.0
   * Rewrites `targets get` to eliminate the need for Git to be installed on student machines.
+  * Adds support for zip file templates with `targets get` if you don't want to host your assignments on GitHub.
   * `tester.dart` and `helpers.dart` are now re-added before every `targets check` or `targets submit` command to ensure students do not modify them
   * The `IOTarget` Java helper methods should now properly compile classes in packages.
   * Errors during `IOTarget` pre-test commands (usually compilation) now halt the testing process, even if there are other tests left to run. Previously (in 0.6.0), errors in compilation only failed the one test.

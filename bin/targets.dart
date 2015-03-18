@@ -9,7 +9,7 @@ import 'moss.dart' as Moss;
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 
-const String VERSION = "0.6.1";
+const String VERSION = "0.7.0";
 
 void main(var args){
     if(Platform.isWindows){
@@ -26,6 +26,7 @@ void main(var args){
         print("Student Commands:");
         print("   setup             Sets up targets for user");
         print("   get <assignment>  Downloads assignment with name from GitHub");
+        print("   get <name> <url>  Downloads assignment with name from zip file");
         print("   check             Runs tests on assignment");
         print("   submit            Submits assignment to server");
         print("   gui               Opens targets web interface");
@@ -45,8 +46,11 @@ void main(var args){
         if(args.length==1){
             print("No assignment detected",RED);
             return;
+        }else if(args.length == 2){
+            getAssignment(args[1],false);
+        }else if(args.length == 3){
+            getZipAssignment(args[1], args[2]);
         }
-        getAssignment(args[1],false);
     }else if(args[0]=="check"){
         checkAssign();
     }else if(args[0]=="submit"){
@@ -139,6 +143,8 @@ void handleSocket(WebSocket socket){
             });
         }else if(command == 'get'){
             getAssignment(map['id'], false);
+        }else if(command == 'get-zip'){
+            getAssignment(map['id'], map['url']);
         }else if(command == 'check'){
             checkAssign();
         }else if(command == 'update'){
@@ -214,23 +220,27 @@ getAssignment(String name, bool isTeacher){
         String githubUser = parts2[0];
         String id = parts2[1];
         String url = 'https://github.com/$githubUser/targets-$id';
-        zipLoad(url, id, isTeacher, owner, githubUser);
+        zipLoad(true, url, id, isTeacher, owner, githubUser);
     }else if(name.contains(":")){
         var parts = name.split(":");
         String url = 'https://github.com/dart-targets/targets-${parts[1]}';
-        zipLoad(url, parts[1], isTeacher, parts[0], "dart-targets");
+        zipLoad(true, url, parts[1], isTeacher, parts[0], "dart-targets");
     }else if(name.contains("/")){
         var parts = name.split("/");
         String url = 'https://github.com/${parts[0]}/targets-${parts[1]}';
-        zipLoad(url, parts[1], isTeacher);
+        zipLoad(true, url, parts[1], isTeacher);
     }else{
         String url = 'https://github.com/dart-targets/targets-$name';
-        zipLoad(url, name, isTeacher);
+        zipLoad(true, url, name, isTeacher);
     }
 }
 
-zipLoad(String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
-    url += "/archive/master.zip";
+getZipAssignment(String name, String url){
+    zipLoad(false, url, name, false);
+}
+
+zipLoad(bool fromGitHub, String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
+    if(fromGitHub) url += "/archive/master.zip";
     if (new Directory(id).existsSync()){
         print("Assignment already downloaded", RED);
         return;
@@ -241,12 +251,18 @@ zipLoad(String url, String id, bool isTeacher, [String newOwner, String oldOwner
         try{
             arch = new ZipDecoder().decodeBytes(response.bodyBytes);
         }on ArchiveException catch(e){
-            print("Could not find assignment with that id");
+            if(fromGitHub){
+                print("Could not find an assignment with that id");
+            }else{
+                print("Could not find an assignment at that address");
+            }
             return;
         }
         print("Download complete. Extracting...");
         for (ArchiveFile file in arch){
-            String filename = file.name.replaceFirst("targets-$id-master", id);
+            String filename = file.name;
+            if(fromGitHub) filename = filename.replaceFirst("targets-$id-master", id);
+            else filename = "$id/$filename";
             print(filename);
             if(!isTeacher && filename == "$id/targets/tests.dart"){
                 File tests = new File("$wd/$id/targets/tests.dart")..createSync(recursive: true);
