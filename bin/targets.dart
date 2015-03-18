@@ -6,7 +6,10 @@ import 'dart:async';
 
 import 'moss.dart' as Moss;
 
-const String VERSION = "0.6.0";
+import 'package:archive/archive.dart';
+import 'package:http/http.dart' as http;
+
+const String VERSION = "0.6.1";
 
 void main(var args){
     if(Platform.isWindows){
@@ -190,6 +193,10 @@ checkAssign(){
         print("You are not in an assignment directory!",RED);
         return;
     }
+    File testerFile = new File("$wd/targets/tester.dart");
+    File helperFile = new File("$wd/targets/helpers.dart");
+    testerFile.writeAsStringSync(tester_dart);
+    helperFile.writeAsStringSync(helpers_dart);
     Process.start("dart",['targets/tester.dart'], workingDirectory:wd).then((process) {
         process.stdout.transform(new Utf8Decoder())
                 .transform(new LineSplitter())
@@ -207,24 +214,71 @@ getAssignment(String name, bool isTeacher){
         String githubUser = parts2[0];
         String id = parts2[1];
         String url = 'https://github.com/$githubUser/targets-$id';
-        gitLoad(url, id, isTeacher, owner, githubUser);
+        zipLoad(url, id, isTeacher, owner, githubUser);
     }else if(name.contains(":")){
         var parts = name.split(":");
-        String url = 'https://github.com/dart-targets/targets-${parts[1]}.git';
-        gitLoad(url, parts[1], isTeacher, parts[0], "dart-targets");
+        String url = 'https://github.com/dart-targets/targets-${parts[1]}';
+        zipLoad(url, parts[1], isTeacher, parts[0], "dart-targets");
     }else if(name.contains("/")){
         var parts = name.split("/");
-        String url = 'https://github.com/${parts[0]}/targets-${parts[1]}.git';
-        gitLoad(url, parts[1], isTeacher);
+        String url = 'https://github.com/${parts[0]}/targets-${parts[1]}';
+        zipLoad(url, parts[1], isTeacher);
     }else{
-        String url = 'https://github.com/dart-targets/targets-$name.git';
-        gitLoad(url, name, isTeacher);
+        String url = 'https://github.com/dart-targets/targets-$name';
+        zipLoad(url, name, isTeacher);
     }
 }
 
+zipLoad(String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
+    url += "/archive/master.zip";
+    if (new Directory(id).existsSync()){
+        print("Assignment already downloaded", RED);
+        return;
+    }
+    print("Attempting assignment download...");
+    http.get(url).then((response){
+        Archive arch;
+        try{
+            arch = new ZipDecoder().decodeBytes(response.bodyBytes);
+        }on ArchiveException catch(e){
+            print("Could not find assignment with that id");
+            return;
+        }
+        print("Download complete. Extracting...");
+        for (ArchiveFile file in arch){
+            String filename = file.name.replaceFirst("targets-$id-master", id);
+            print(filename);
+            if(!isTeacher && filename == "$id/targets/tests.dart"){
+                File tests = new File("$wd/$id/targets/tests.dart")..createSync(recursive: true);
+                var lines = UTF8.decode(file.content).split("\n");
+                String text = "";
+                for(String str in lines){
+                    if(str=='final String owner = "$oldOwner";'&&newOwner!=null){
+                        text += 'final String owner = "$newOwner";\n';
+                    }else if(!str.startsWith("///"))text+="$str\n";
+                }
+                tests.writeAsStringSync(text);
+            }else if(filename.endsWith("/")){
+                new Directory("$wd/$filename")..createSync(recursive: true);
+            }else{
+                new File("$wd/$filename")..createSync(recursive: true)..writeAsBytesSync(file.content);
+            }
+        }
+        File testerFile = new File("$wd/$id/targets/tester.dart");
+        File helperFile = new File("$wd/$id/targets/helpers.dart");
+        testerFile.writeAsStringSync(tester_dart);
+        helperFile.writeAsStringSync(helpers_dart);
+        if(isTeacher){
+            print("Template downloaded to '$id'", GREEN);
+        }else print("Assignment downloaded to '$id'", GREEN);
+    });
+}
+
+/** no longer used in favor of zipLoad starting in 0.6.1 */
 gitLoad(String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
+    url += ".git";
     if(new Directory(id).existsSync()){
-        print("Assignment already downloaded",RED);
+        print("Assignment already downloaded", RED);
         return;
     }
     print("Checking if assignment exists...");
@@ -274,6 +328,10 @@ submit(bool manual, {String withInfo:null, callback:null}){
     }else if(! new File("$wd/targets/tester.dart").existsSync()){
         print("You are not in an assignment directory!",RED);
     }else{
+        File testerFile = new File("$wd/targets/tester.dart");
+        File helperFile = new File("$wd/targets/helpers.dart");
+        testerFile.writeAsStringSync(tester_dart);
+        helperFile.writeAsStringSync(helpers_dart);
         Process.run('dart', ['targets/tester.dart','submit'], 
                 workingDirectory:wd).then((ProcessResult results) {
             List<String> lines = results.stdout.split("\n");
@@ -528,14 +586,15 @@ class IOTarget extends TestTarget{
             var preErr = "";
             if(preCommand!=null){
                 if(preCommand is String){
-                    preErr = runCommand(preCommand);
+                    preErr = "\n" + runCommand(preCommand);
                 }else{
-                    for(String str in preCommand) runCommand(str);
+                    for(String str in preCommand) preErr += "\n" + runCommand(str);
                 }
             }
-            if(preErr.length > 0){
-                this.error = preErr;
-                return false;
+            if(preErr.trim().length > 0){
+                print("Pre-test commands failed with error:$preErr");
+                print("Correct this error in order to run tests.");
+                exit(0);
             }
             var parts = command.split(" ");
             var exe = parts.removeAt(0);
@@ -573,7 +632,11 @@ class IOTarget extends TestTarget{
 
     /// Generates a single IOTarget for a Java program
     static IOTarget makeJava(String mainClass, InputOutput io){
-        String pre = "javac -nowarn $mainClass.java";
+        String compileClass = mainClass;
+        if(mainClass.contains(".")){
+            compileClass = mainClass.replaceAll(".", "/");
+        }
+        String pre = "javac -nowarn $compileClass.java";
         String command = "java $mainClass";
         if(io.args != null) command += " ${io.args}";
         return new IOTarget(io.name, command, input, output, pre);
@@ -583,9 +646,13 @@ class IOTarget extends TestTarget{
     /// Only compiles when the first target is run
     static List<IOTarget> makeMultiJava(String mainClass, List<InputOutput> ios){
         List<IOTarget> targets = [];
+        String compileClass = mainClass;
+        if(mainClass.contains(".")){
+            compileClass = mainClass.replaceAll(".", "/");
+        }
         for(InputOutput io in ios){
             String pre = null;
-            if(targets.length==0) pre = "javac $mainClass.java";
+            if(targets.length==0) pre = "javac -nowarn $compileClass.java";
             String command = "java $mainClass";
             if(io.args!=null) command += " ${io.args}";
             targets.add(new IOTarget(io.name, command, io.input, io.output, pre));

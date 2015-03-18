@@ -1,3 +1,9 @@
+#### 0.6.1
+  * Rewrites `targets get` to eliminate the need for Git to be installed on student machines.
+  * `tester.dart` and `helpers.dart` are now re-added before every `targets check` or `targets submit` command to ensure students do not modify them
+  * The `IOTarget` Java helper methods should now properly compile classes in packages.
+  * Errors during `IOTarget` pre-test commands (usually compilation) now halt the testing process, even if there are other tests left to run. Previously (in 0.6.0), errors in compilation only failed the one test.
+
 #### 0.6.0
   * New `targets moss` command
   * Allows teachers to send student code that's prepared for `targets batch` to [Moss][http://moss.stanford.edu] for similarity detection

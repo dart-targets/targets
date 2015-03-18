@@ -56,6 +56,6 @@ You can install targets with:
 
     pub global activate targets
 
-You may be prompted by pub to add a directory to your path. Targets also requires both Dart and Git to be installed to your path.
+You may be prompted by pub to add a directory to your path. Obviously, Dart should also be on your path. Previous versions of Targets required Git to download assignment templates, but, starting in 0.6.1, templates are instead downloaded from the zip archive of the project that GitHub provides.
 
 The code is available on [GitHub](https://github.com/dart-targets/targets) under the revised BSD license.
