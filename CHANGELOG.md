@@ -1,3 +1,8 @@
+#### 0.7.1
+  * New `targets template` command that works like `targets init`, but downloads to a folder called `template` (for later use with `targets batch`)
+  * New `targets distribute` command which takes a folder set up for `targets batch` and creates a folder for each submission that contains the student code on top of the template (if you want to manually run anything on student code that requires template files)
+  * Update from web console no longer requires Targets to be on the path (only pub needs to be)
+
 #### 0.7.0
   * Rewrites `targets get` to eliminate the need for Git to be installed on student machines.
   * Adds support for zip file templates with `targets get` if you don't want to host your assignments on GitHub.

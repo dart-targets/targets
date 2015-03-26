@@ -9,7 +9,7 @@ import 'moss.dart' as Moss;
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 
-const String VERSION = "0.7.0";
+const String VERSION = "0.7.1";
 
 void main(var args){
     if(Platform.isWindows){
@@ -34,7 +34,9 @@ void main(var args){
         print("Teacher Commands:");
         print("   init              Downloads template from GitHub");
         print("   init <assignment> Downloads assignment from GitHub as template");
+        print("   template <assign> Like init, but downloads to folder called 'template'");
         print("   batch             Grades multiple submissions downloaded from server");
+        print("   distribute        Combines template with each student's code");
         print("   moss              Submits submissions to Moss for similarity detection");
         print("");
         print("Teachers should upload completed templates with tests to GitHub");
@@ -63,8 +65,16 @@ void main(var args){
         }else{
             getAssignment(args[1],true);
         }
+    }else if(args[0]=="template"){
+        if(args.length==1){
+            getAssignment("example",true,true);
+        }else{
+            getAssignment(args[1],true,true);
+        }
     }else if(args[0]=="batch"){
         batch();
+    }else if(args[0]=="distribute"){
+        distribute();
     }else if(args[0]=="gui"){
         if(args.length == 1){
             runGuiServer(7620);
@@ -154,7 +164,7 @@ void handleSocket(WebSocket socket){
             new Future.delayed(new Duration(milliseconds:2000),(){
                 server.close(force:true);
                 serverPrint("Starting new instance...");
-                Process.start('targets',['gui-server', '$currentPort', currentUrl], runInShell:true).then((process) {
+                Process.start('pub',['global','run','targets', 'gui-server', '$currentPort', currentUrl], runInShell:true).then((process) {
                     process.stdout.transform(new Utf8Decoder())
                             .transform(new LineSplitter()).listen((String line){
                         serverPrint(line);
@@ -212,7 +222,7 @@ checkAssign(){
     });
 }
 
-getAssignment(String name, bool isTeacher){
+getAssignment(String name, bool isTeacher, [bool isTemplate=false]){
     if (name.contains(":")&&name.contains("/")){
         var parts = name.split(":");
         var parts2 = parts[1].split("/");
@@ -220,28 +230,32 @@ getAssignment(String name, bool isTeacher){
         String githubUser = parts2[0];
         String id = parts2[1];
         String url = 'https://github.com/$githubUser/targets-$id';
-        zipLoad(true, url, id, isTeacher, owner, githubUser);
+        zipLoad(isTemplate, true, url, id, isTeacher, owner, githubUser);
     }else if(name.contains(":")){
         var parts = name.split(":");
         String url = 'https://github.com/dart-targets/targets-${parts[1]}';
-        zipLoad(true, url, parts[1], isTeacher, parts[0], "dart-targets");
+        String id = parts[1];
+        zipLoad(isTemplate, true, url, id, isTeacher, parts[0], "dart-targets");
     }else if(name.contains("/")){
         var parts = name.split("/");
         String url = 'https://github.com/${parts[0]}/targets-${parts[1]}';
-        zipLoad(true, url, parts[1], isTeacher);
+        String id = parts[1];
+        zipLoad(isTemplate, true, url, id, isTeacher);
     }else{
         String url = 'https://github.com/dart-targets/targets-$name';
-        zipLoad(true, url, name, isTeacher);
+        zipLoad(isTemplate, true, url, name, isTeacher);
     }
 }
 
 getZipAssignment(String name, String url){
-    zipLoad(false, url, name, false);
+    zipLoad(false, false, url, name, false);
 }
 
-zipLoad(bool fromGitHub, String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
+zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
     if(fromGitHub) url += "/archive/master.zip";
-    if (new Directory(id).existsSync()){
+    String realID = id;
+    if(isTemplate) id = "template";
+    if (new Directory("$wd/$id").existsSync()){
         print("Assignment already downloaded", RED);
         return;
     }
@@ -261,7 +275,7 @@ zipLoad(bool fromGitHub, String url, String id, bool isTeacher, [String newOwner
         print("Download complete. Extracting...");
         for (ArchiveFile file in arch){
             String filename = file.name;
-            if(fromGitHub) filename = filename.replaceFirst("targets-$id-master", id);
+            if(fromGitHub) filename = filename.replaceFirst("targets-$realID-master", id);
             else filename = "$id/$filename";
             print(filename);
             if(!isTeacher && filename == "$id/targets/tests.dart"){
@@ -286,7 +300,7 @@ zipLoad(bool fromGitHub, String url, String id, bool isTeacher, [String newOwner
         helperFile.writeAsStringSync(helpers_dart);
         if(isTeacher){
             print("Template downloaded to '$id'", GREEN);
-        }else print("Assignment downloaded to '$id'", GREEN);
+        }else print("Assignment downloaded to '$id'", GREEN);   
     });
 }
 
@@ -455,7 +469,7 @@ batch(){
     File tests = new File("targets/tests.dart");
     File alttests = new File("template/targets/tests.dart");
     if(!tests.existsSync()&&!alttests.existsSync()){
-        print("You need to add targets/tests.dart to this directory first!",RED);
+        print("You need to add a template to this directory first!",RED);
         return;
     }
     String log = "";
@@ -463,7 +477,7 @@ batch(){
     for(var dir in directs){
         if(dir is Directory){
             String dirpath = dir.path.split(Platform.pathSeparator).last;
-            if(dirpath!="targets" && dirpath!="template"){
+            if(dirpath!="targets" && dirpath!="template"&&dirpath!="distributed"){
                 log+="$dirpath\n****************************************\n";
                 print("Testing $dirpath...");
                 Directory temp = new Directory(".temp");
@@ -494,6 +508,28 @@ batch(){
     }
     new File("log.txt").writeAsStringSync(log);
     print("Tests complete. Results outputted to 'log.txt'",GREEN);
+}
+
+distribute(){
+    Directory template = new Directory("template");
+    Directory dist = new Directory("distributed");
+    if(!template.existsSync()){
+        print("You need to add a template to this directory first!",RED);
+        return;
+    } else if(dist.existsSync()){
+        print("Submissions already distributed!", RED);
+        return;
+    }
+    dist.createSync();
+    for(var dir in Directory.current.listSync()){
+        if(dir is Directory){
+            String dirpath = dir.path.split(Platform.pathSeparator).last;
+            if(dirpath!="targets"&&dirpath!="template"&&dirpath!="distributed"){
+                copyDirectory(template, new Directory("distributed/$dirpath"));
+                copyDirectory(dir, new Directory("distributed/$dirpath"));
+            }
+        }
+    }
 }
 
 copyDirectory(Directory from, Directory to){
