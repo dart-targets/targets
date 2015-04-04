@@ -1,3 +1,10 @@
+#### 0.7.2
+  * New scoring option for `TestTargets`. Set `points` to a value greater than 0 to add that many points of the test returns true.
+  * New `uncounted` option for all targets. Set this property to true and the test is counted as extra credit.
+  * This now means that `IOTargets` can be scored, though their points are all-or-nothing.
+  * `InputOutput` objects (used for creating `IOTarget` tests) now have optional parameters for `points` and `uncounted` in their constructors
+  * Minor bug fixes
+
 #### 0.7.1
   * New `targets template` command that works like `targets init`, but downloads to a folder called `template` (for later use with `targets batch`)
   * New `targets distribute` command which takes a folder set up for `targets batch` and creates a folder for each submission that contains the student code on top of the template (if you want to manually run anything on student code that requires template files)

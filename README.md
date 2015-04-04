@@ -44,6 +44,8 @@ Starting in 0.6.0, Targets supports easy submission of student code to [Moss](ht
 
 Targets is primarily designed to test code written in Dart. However, version 0.2.3 added support for `IOTarget`, which lets you test output for given input sent to a program. To see an example of how `IOTarget` works, `targets init java-example`. I've tested simple examples on both OSX and Windows, but testing more complex programs may result in some issues, particularly cross-platform. If you use `IOTarget`, make sure to use `targets check` on a completed version of your template on each OS that your students may use.
 
+Prior to 0.7.2, `IOTarget` tests could not be scored. With the new properties for `TestTarget` (which `IOTarget` extends) in 0.7.2, each `IOTarget` can add an all-or-nothing amount of points to the total score.
+
 For obvious reasons, `IOTarget` is not supported by the web grader, though `targets batch` should work fine.
 
 ### Web Interface ###
