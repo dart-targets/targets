@@ -1,3 +1,6 @@
+#### 0.7.3
+  * New `targets submissions` command, which allows you to download student submissions from the console
+
 #### 0.7.2
   * New scoring option for `TestTargets`. Set `points` to a value greater than 0 to add that many points of the test returns true.
   * New `uncounted` option for all targets. Set this property to true and the test is counted as extra credit.

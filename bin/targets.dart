@@ -1,5 +1,3 @@
-#!/usr/bin/env dart
-
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
@@ -9,7 +7,7 @@ import 'moss.dart' as Moss;
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 
-const String VERSION = "0.7.2";
+const String VERSION = "0.7.3";
 
 void main(var args){
     if(Platform.isWindows){
@@ -34,6 +32,7 @@ void main(var args){
         print("Teacher Commands:");
         print("   init              Downloads template from GitHub");
         print("   init <assignment> Downloads assignment from GitHub as template");
+        print("   submissions <id>  Downloads all submissions and template for assignment");
         print("   template <assign> Like init, but downloads to folder called 'template'");
         print("   batch             Grades multiple submissions downloaded from server");
         print("   distribute        Combines template with each student's code");
@@ -64,6 +63,12 @@ void main(var args){
             getAssignment("example",true);
         }else{
             getAssignment(args[1],true);
+        }
+    }else if(args[0]=="submissions"){
+        if(args.length==2){
+            getSubmissions(args[1]);
+        } else {
+            print("Invalid Command");
         }
     }else if(args[0]=="template"){
         if(args.length==1){
@@ -300,7 +305,10 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
         helperFile.writeAsStringSync(helpers_dart);
         if(isTeacher){
             print("Template downloaded to '$id'", GREEN);
-        }else print("Assignment downloaded to '$id'", GREEN);   
+        }else print("Assignment downloaded to '$id'", GREEN);
+        if (loadCallback != null) {
+            loadCallback();
+        }
     });
 }
 
@@ -463,6 +471,74 @@ List<File> allFilesInDirectory(Directory dir){
         }
     }
     return files;
+}
+
+var loadCallback = null;
+
+getSubmissions(String id){
+    File info = new File("$HOME/.targets-oauth");
+    if(!info.existsSync()){
+        print("You need to authenticate with GitHub to use this command.");
+        print("You'll only need to do this once.");
+        print("Go to https://github.com/settings/applications");
+        print("Click 'Generate new token' under 'Personal access tokens'");
+        print("Click 'Generate token' on the next page");
+        print("Copy the hexadecimal string that's highlighted and paste it here.");
+        print("");
+        String oauth = prompt("OAuth Token: ");
+        info.writeAsStringSync(oauth);
+    }
+    String token = info.readAsStringSync();
+    List<String> parts = id.split("/");
+    if (parts.length != 2) {
+        print("Invalid assignment id!");
+        return;
+    }
+    String dirname = "${parts[0]}-${parts[1]}";
+    Directory dir = new Directory("$wd/$dirname");
+    if (dir.existsSync()) {
+        print("$dirname already exists in this directory!");
+        return;
+    }
+    String url = "http://darttargets.com/results/console_zipper.php";
+    print("Attempting downloading...");
+    http.post(url, body: {"token": token, "owner": parts[0], "project": parts[1]})
+        .then((response) {
+        if (response.body == "Invalid authentication") {
+            print("You aren't allowed to download submissions for that assignment");
+            print("If you need to reauthenticate, delete ~/.targets-oauth");
+        } else {
+            print("Submissions downloaded.");
+            print("Downloading template...");
+            var oldwd = wd;
+            wd = wd + "/$dirname";
+            var oldprint = print;
+            print = (a, [b]){};
+            loadCallback = (){
+                print = oldprint;
+                wd = oldwd;
+                print("Template downloaded.");
+                Archive arch;
+                try{
+                    arch = new ZipDecoder().decodeBytes(response.bodyBytes);
+                }on ArchiveException catch(e){
+                    print("Something went wrong! Try again");
+                    return;
+                }
+                print("Extracting submissions...");
+                for (ArchiveFile file in arch){
+                    String filename = file.name;
+                    if(filename.endsWith("/")){
+                        new Directory("$wd/$filename")..createSync(recursive: true);
+                    }else{
+                        new File("$wd/$filename")..createSync(recursive: true)..writeAsBytesSync(file.content);
+                    }
+                }
+                print("Submisssions extracted to $dirname.");
+            };
+            getAssignment(id,true,true);
+        }
+    });
 }
 
 batch(){

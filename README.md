@@ -32,6 +32,8 @@ Submissions are made to the GitHub user or organization name set in the `owner` 
 
 Once you download a zip of submissions, you can run tests on all them with `targets batch`. Just put a version of your assignment template with more rigorous tests into a folder called `template` within the extracted zip file. `targets batch` will output a log of tests on all submissions to `log.txt`.
 
+Starting in 0.7.3, you can download submissions from the command line with `targets submissions username/assignment`. This will require that you create an OAuth key for GitHub, but then you can set up a directory to run `targets batch` with just one command.
+
 Additionally, if you open the submission viewer in Dartium, you can paste in code from a `tests.dart` file to run tests of Dart code without downloading submissions. Please note that this feature works best with very simple assignments. When all code is in one file, it should work fine. It should theoretically work with multiple files, as long as they are all uploaded with students' submissions, but things may break. If the web grader does not work, just download the zip and use `targets batch`.
 
 For the time being, the submission service is free of charge. The server is running on "unlimited" shared hosting, so I shouldn't have any issues keeping it free, unless demand is such that I go beyond whatever my host deems "unlimited" to be. To keep the server lightweight, all submissions will be deleted after 30 days. Make sure to download the zip archive within that window or your students will have to resubmit.
