@@ -1,7 +1,7 @@
 name: targets
 author: Jack Thakar <jack@jackthakar.com>
 homepage: http://github.com/dart-targets/targets
-version: 0.7.4
+version: 0.7.4+1
 description: Simple assignment manager and autograder
 dependencies:
   archive: ">=1.0.19 <2.0.0"

@@ -34,6 +34,9 @@ getAssignment(String name, bool isTeacher, [bool isTemplate=false]){
         repoOwner = name.split("/")[0];
         if (newOwner == null) newOwner = repoOwner;
         name = name.substring(repoOwner.length + 1);
+    } else {
+        repoOwner = "dart-targets";
+        newOwner = "dart-targets";
     }
     String url = "https://github.com/$repoOwner/targets-$name/archive/master.zip";
     if (name.contains("/")) {
@@ -65,7 +68,6 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
         return;
     }
     print("Attempting assignment download...");
-    print("url: $url - realID: $realID - id: $id - subdirLoc: $subdirLoc");
     http.get(url).then((response){
         Archive arch;
         try {
