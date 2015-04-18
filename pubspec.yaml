@@ -1,11 +1,12 @@
 name: targets
 author: Jack Thakar <jack@jackthakar.com>
 homepage: http://github.com/dart-targets/targets
-version: 0.7.3
+version: 0.7.4
 description: Simple assignment manager and autograder
 dependencies:
   archive: ">=1.0.19 <2.0.0"
   http: ">=0.11.1+3 <0.12.0"
+  args: ">=0.12.0+2 <0.13.0"
 dev_dependencies:
   browser: ">=0.10.0+2 <0.11.0"
 executables:

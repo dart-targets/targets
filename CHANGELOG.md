@@ -1,3 +1,7 @@
+#### 0.7.4
+  * Major code refactoring
+  * Minor changes to the command-line interface
+
 #### 0.7.3
   * New `targets submissions` command, which allows you to download student submissions from the console
 

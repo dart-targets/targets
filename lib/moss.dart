@@ -1,8 +1,7 @@
+part of targets_cli;
+
 /// This adds support for Moss similarity detection on any set of student
 /// submissions that supports the `targets batch` command
-
-import 'dart:io';
-import 'dart:convert';
 
 Socket socket;
 
@@ -12,7 +11,7 @@ String lang;
 
 var exts = [];
 
-void run(){
+void mossRun(){
     Directory template = new Directory("template");
     if(!template.existsSync()){
         print("You must add a template to this directory first!", RED);
@@ -35,7 +34,7 @@ void run(){
         id = prompt("Moss Account ID: ").trim();
     }
     cache.writeAsStringSync(id);
-    print("Run 'targets moss help' for language options");
+    print("Run 'targets moss --help' for language options");
     lang = prompt("Language: ").toLowerCase();
     while(true){
         var next = prompt("File Extension (enter to stop): ");
@@ -115,17 +114,6 @@ void receiveLanguageValidation(result){
     }
 }
 
-openBrowser(url){
-    print("Results at: $url");
-    if(Platform.isMacOS){
-        Process.start('open', [url]);
-    }else if(Platform.isLinux){
-        Process.start('x-www-browser', [url]);
-    }else if(Platform.isWindows){
-        Process.start('explorer', [url]);
-    }
-}
-
 bool validFileType(String path){
     for(var e in exts){
         if(path.endsWith(".$e")) return true;
@@ -154,7 +142,7 @@ class MossFile{
     }
 }
 
-void help(){
+void mossHelp(){
     var langs = ["c", "cc", "java", "ml", "pascal", "ada", "lisp", "scheme",
         "haskell", "fortran", "ascii", "vhdl", "perl", "matlab", "python", 
         "mips", "prolog", "spice", "vb", "csharp", "modula2", "a8086", 
@@ -171,34 +159,4 @@ void help(){
         }else str += " ";
     }
     print(str);
-}
-
-const String PLAIN = "plain";
-const String GREEN = "green";
-const String RED = "red";
-const String BLUE = "blue";
-
-Function print = (String str, [String type=PLAIN]){
-    if(type==PLAIN||Platform.isWindows){
-        stdout.writeln(str);
-    }else if(type==RED){
-        stdout.writeln("\u001b[0;31m"+str+"\u001b[0;0m");
-    }else if(type==GREEN){
-        stdout.writeln("\u001b[0;32m"+str+"\u001b[0;0m");
-    }else if(type==BLUE){
-        stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
-    }
-};
-
-String prompt(String str, [String type=PLAIN]){
-    if(type==PLAIN||Platform.isWindows){
-        stdout.write(str);
-    }else if(type==RED){
-        stdout.write("\u001b[0;31m"+str+"\u001b[0;0m ");
-    }else if(type==GREEN){
-        stdout.write("\u001b[0;32m"+str+"\u001b[0;0m ");
-    }else if(type==BLUE){
-        stdout.write("\u001b[0;36m"+str+"\u001b[0;0m ");
-    }
-    return stdin.readLineSync();
 }
