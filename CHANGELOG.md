@@ -1,4 +1,7 @@
 #### 0.7.4
+  * Targets template can now be stored in subdirectories of repos
+  * Just like `user/assign` refers to `https://github.com/user/targets-assign`, `user/assign/dir1/dir2` refers to `dir1/targets-dir2` within `https://github.com/user/assign`.
+  * This allows you to include a Targets assignment within an existing repository or keep multiple assignments in the same repository.
   * Major code refactoring
   * Minor changes to the command-line interface
 

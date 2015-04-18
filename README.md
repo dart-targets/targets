@@ -22,6 +22,8 @@ To create a new assignment template, you can download a fully commented version 
 
 Once you've completed your assignment template, push it to a new GitHub repository. The repo name should start with `targets-`. Students can then download your new assignment with `targets get user/id` when `user` is your GitHub username and `id` is everything after the `targets-` in your repo name.
 
+Starting in 0.7.4, you can keep templates in subdirectories of GitHub repositories. For example, an ID like `user/assign/dirA/dirB` refers to a Targets template in the subdirectory `dirA/targets-dirB` within the GitHub repo at `https://github.com/user/assign`. The assignment will be downloaded to a directory called `assign-dirA-dirB`. You should use this for the `id` field of `tests.dart`. This allows you to add a Targets template to an existing repository or include multiple Targets templates in the same repository.
+
 If you would prefer to keep your assignment templates private, you can instead put the template in a zip file (with the root of the template at the root of the zip) and share the URL with your students. Note that in this case, you cannot share the same zip with other teachers as Targets will not modify the owner property in `tests.dart`. If you want to share assignments, post them to GitHub (it also makes them easier for your students to download).
 
 ### Submission and Grading ###

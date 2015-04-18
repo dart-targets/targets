@@ -22,28 +22,25 @@ checkAssign(){
 }
 
 getAssignment(String name, bool isTeacher, [bool isTemplate=false]){
-    if (name.contains(":")&&name.contains("/")){
-        var parts = name.split(":");
-        var parts2 = parts[1].split("/");
-        String owner = parts[0];
-        String githubUser = parts2[0];
-        String id = parts2[1];
-        String url = 'https://github.com/$githubUser/targets-$id';
-        zipLoad(isTemplate, true, url, id, isTeacher, owner, githubUser);
-    }else if(name.contains(":")){
-        var parts = name.split(":");
-        String url = 'https://github.com/dart-targets/targets-${parts[1]}';
-        String id = parts[1];
-        zipLoad(isTemplate, true, url, id, isTeacher, parts[0], "dart-targets");
-    }else if(name.contains("/")){
-        var parts = name.split("/");
-        String url = 'https://github.com/${parts[0]}/targets-${parts[1]}';
-        String id = parts[1];
-        zipLoad(isTemplate, true, url, id, isTeacher);
-    }else{
-        String url = 'https://github.com/dart-targets/targets-$name';
-        zipLoad(isTemplate, true, url, name, isTeacher);
+    String newOwner = null;
+    String repoOwner = null;
+    
+    if (name.contains(":")) {
+        newOwner = name.split(":")[0];
+        name = name.split(":")[1];
     }
+    
+    if (name.contains("/")) {
+        repoOwner = name.split("/")[0];
+        if (newOwner == null) newOwner = repoOwner;
+        name = name.substring(repoOwner.length + 1);
+    }
+    String url = "https://github.com/$repoOwner/targets-$name/archive/master.zip";
+    if (name.contains("/")) {
+        String repo = name.split("/")[0];
+        url = "https://github.com/$repoOwner/$repo/archive/master.zip";
+    }
+    zipLoad(isTemplate, true, url, name, isTeacher, newOwner, repoOwner);
 }
 
 getZipAssignment(String name, String url){
@@ -51,14 +48,24 @@ getZipAssignment(String name, String url){
 }
 
 zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
-    if(fromGitHub) url += "/archive/master.zip";
     String realID = id;
+    String subdirLoc = null;
+    if(id.contains("/") && fromGitHub) {
+        id = id.replaceAll("/", "-");
+        var parts = realID.split("/");
+        subdirLoc = parts[1];
+        for (int i = 2; i < parts.length - 1; i++) {
+            subdirLoc += "/" + parts[i];
+        }
+        subdirLoc += "/targets-" + parts.last;
+    }
     if(isTemplate) id = "template";
     if (new Directory("$wd/$id").existsSync()){
         print("Assignment already downloaded", RED);
         return;
     }
     print("Attempting assignment download...");
+    print("url: $url - realID: $realID - id: $id - subdirLoc: $subdirLoc");
     http.get(url).then((response){
         Archive arch;
         try {
@@ -74,8 +81,13 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
         print("Download complete. Extracting...");
         for (ArchiveFile file in arch){
             String filename = file.name;
-            if(fromGitHub) filename = filename.replaceFirst("targets-$realID-master", id);
-            else filename = "$id/$filename";
+            if (realID.contains("/") && fromGitHub) {
+                String prefix = "${realID.split('/')[0]}-master/$subdirLoc";
+                if (!filename.startsWith(prefix)) continue;
+                filename = filename.replaceFirst(prefix, id);
+            } else if(fromGitHub) {
+                filename = filename.replaceFirst("targets-$realID-master", id);
+            } else filename = "$id/$filename";
             print(filename);
             if(!isTeacher && filename == "$id/targets/tests.dart"){
                 File tests = new File("$wd/$id/targets/tests.dart")..createSync(recursive: true);
