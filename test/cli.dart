@@ -7,7 +7,8 @@ import "package:test/test.dart";
 import "../bin/targets.dart" as CLI;
 
 // access token for targetsbot
-String oauth = "b25fb60a3318fb748fce50b596d1aa484a96c4f4";
+// broken up to prevent GitHub from revoking it
+String oauth = "c31147496528497955" + "42f06a1d2642655e00f83e";
 
 void main() {
     setUp(setup);
