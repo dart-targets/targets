@@ -1,5 +1,7 @@
 ## targets ##
 
+[![Build Status](https://travis-ci.org/dart-targets/targets.svg)](https://travis-ci.org/dart-targets/targets)
+
 Targets is an assignment manager and autograder intended for high school CS classes that uses GitHub to download assignment templates.
 
 This README describes the fundamentals of using Targets. [Full documentation](http://docs.darttargets.com) intended for teachers and students is also available, though it is currently a draft and is subject to change.
