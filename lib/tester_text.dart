@@ -55,9 +55,9 @@ void runTests(){
             }else if(s != null) score += s;
             String extra = "";
             if(t.error!=null){
-                extra = "- ${t.error}";
+                extra = " - ${t.error}";
             }
-            print("${t.name}: $s/${t.points} $extra");
+            print("${t.name}: $s/${t.points}$extra");
         }else if(t is TestTarget){
             bool result = false;
             try{
@@ -69,22 +69,22 @@ void runTests(){
             }
             String extra = "";
             if(t.error!=null){
-                extra = "- ${t.error}";
+                extra = " - ${t.error}";
             }
             if (t.points <= 0) {
                 if(result){
-                    print("${t.name}: Passed $extra");
+                    print("${t.name}: Passed$extra");
                 }else{
-                    print("${t.name}: Failed $extra");
+                    print("${t.name}: Failed$extra");
                     if(!t.uncounted) allPassed = false;
                 }
             } else {
                 if(!t.uncounted) maxPoints += t.points;
                 if(result){
                     score += t.points;
-                    print("${t.name}: Passed (${t.points} points) $extra");
+                    print("${t.name}: Passed (${t.points} points)$extra");
                 } else {
-                    print("${t.name}: Failed (${t.points} points) $extra");
+                    print("${t.name}: Failed (${t.points} points)$extra");
                 }
             }
         }

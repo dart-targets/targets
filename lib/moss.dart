@@ -11,7 +11,7 @@ String lang;
 
 var exts = [];
 
-void mossRun(){
+Future mossRun(){
     Directory template = new Directory("template");
     if(!template.existsSync()){
         print("You must add a template to this directory first!", RED);
@@ -44,7 +44,7 @@ void mossRun(){
             exts.add(next);
         }
     }
-    Socket.connect("moss.stanford.edu", 7690).then((newSocket){
+    return Socket.connect("moss.stanford.edu", 7690).then((newSocket){
         socket = newSocket;
         socket.transform(new Utf8Decoder())
                 .transform(new LineSplitter())

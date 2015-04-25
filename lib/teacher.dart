@@ -22,7 +22,14 @@ getSubmissions(String id){
         print("Invalid assignment id!");
         return;
     }
-    String dirname = "${parts[0]}-${parts[1]}";
+    String teacher = parts[0];
+    String owner = teacher;
+    if (teacher.contains(":")) {
+        List<String> pieces = teacher.split(":");
+        teacher = pieces[0];
+        owner = pieces[1];
+    }
+    String dirname = "$teacher-${parts[1]}";
     Directory dir = new Directory("$wd/$dirname");
     if (dir.existsSync()) {
         print("$dirname already exists in this directory!");
@@ -30,7 +37,7 @@ getSubmissions(String id){
     }
     String url = "http://darttargets.com/results/console_zipper.php";
     print("Attempting download...");
-    http.post(url, body: {"token": token, "owner": parts[0], "project": parts[1]})
+    return http.post(url, body: {"token": token, "owner": teacher, "project": parts[1]})
         .then((response) {
         if (response.body == "Invalid authentication") {
             print("You aren't allowed to download submissions for that assignment");
@@ -64,40 +71,37 @@ getSubmissions(String id){
                 }
                 print("Submisssions extracted to $dirname.");
             };
-            getAssignment(id,true,true);
+            return getAssignment(id,true,true);
         }
     });
 }
 
 batch(){
-    File tests = new File("targets/tests.dart");
-    File alttests = new File("template/targets/tests.dart");
+    File tests = new File("$wd/targets/tests.dart");
+    File alttests = new File("$wd/template/targets/tests.dart");
     if(!tests.existsSync()&&!alttests.existsSync()){
         print("You need to add a template to this directory first!",RED);
         return;
     }
     String log = "";
-    var directs = Directory.current.listSync();
+    var directs = new Directory(wd).listSync();
     for(var dir in directs){
         if(dir is Directory){
             String dirpath = dir.path.split(Platform.pathSeparator).last;
-            if(dirpath!="targets" && dirpath!="template"&&dirpath!="distributed"){
+            if(dirpath!="template"&&dirpath!="distributed"){
                 log+="$dirpath\n****************************************\n";
                 print("Testing $dirpath...");
-                Directory temp = new Directory(".temp");
+                Directory temp = new Directory("$wd/.temp");
                 temp.createSync();
-                copyDirectory(new Directory("template"), temp);
-                copyDirectory(new Directory("targets"), new Directory(".temp/targets"));
+                copyDirectory(new Directory("$wd/template"), temp);
                 copyDirectory(dir, temp);
-                new File(".temp/targets/tester.dart").writeAsStringSync(tester_dart);
-                new File(".temp/targets/helpers.dart").writeAsStringSync(helpers_dart);
-                var current = Directory.current;
-                Directory.current = ".temp";
-                var res = Process.runSync("dart",["targets/tester.dart"]);
+                new File("$wd/.temp/targets/tester.dart").writeAsStringSync(tester_dart);
+                new File("$wd/.temp/targets/helpers.dart").writeAsStringSync(helpers_dart);
+                var path = "$wd/.temp";
+                var res = Process.runSync("dart",["targets/tester.dart"], workingDirectory: path);
                 log+=res.stdout;
                 log+=res.stderr;
                 log+="\n";
-                Directory.current = current;
                 temp.deleteSync(recursive:true);
             }
         }
@@ -110,13 +114,13 @@ batch(){
     if(Platform.isWindows){
         log = log.replaceAll("\n","\r\n");
     }
-    new File("log.txt").writeAsStringSync(log);
+    new File("$wd/log.txt").writeAsStringSync(log);
     print("Tests complete. Results outputted to 'log.txt'",GREEN);
 }
 
 distribute(){
-    Directory template = new Directory("template");
-    Directory dist = new Directory("distributed");
+    Directory template = new Directory("$wd/template");
+    Directory dist = new Directory("$wd/distributed");
     if(!template.existsSync()){
         print("You need to add a template to this directory first!",RED);
         return;
@@ -129,8 +133,8 @@ distribute(){
         if(dir is Directory){
             String dirpath = dir.path.split(Platform.pathSeparator).last;
             if(dirpath!="targets"&&dirpath!="template"&&dirpath!="distributed"){
-                copyDirectory(template, new Directory("distributed/$dirpath"));
-                copyDirectory(dir, new Directory("distributed/$dirpath"));
+                copyDirectory(template, new Directory("$wd/distributed/$dirpath"));
+                copyDirectory(dir, new Directory("$wd/distributed/$dirpath"));
             }
         }
     }

@@ -9,7 +9,7 @@ String currentUrl;
 const String defaultURL = "http://darttargets.com/gui";
 
 runGuiServer(port, [browser=true, url=defaultURL]){
-    HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
+    return HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
         currentPort = port;
         currentUrl = url;

@@ -12,12 +12,13 @@ checkAssign(){
     File helperFile = new File("$wd/targets/helpers.dart");
     testerFile.writeAsStringSync(tester_dart);
     helperFile.writeAsStringSync(helpers_dart);
-    Process.start("dart",['targets/tester.dart'], workingDirectory:wd).then((process) {
+    return Process.start("dart",['targets/tester.dart'], workingDirectory:wd).then((process) {
         process.stdout.transform(new Utf8Decoder())
                 .transform(new LineSplitter())
                 .listen((String line){
                     print(line);
                 });
+        return process.exitCode;
     });
 }
 
@@ -43,11 +44,11 @@ getAssignment(String name, bool isTeacher, [bool isTemplate=false]){
         String repo = name.split("/")[0];
         url = "https://github.com/$repoOwner/$repo/archive/master.zip";
     }
-    zipLoad(isTemplate, true, url, name, isTeacher, newOwner, repoOwner);
+    return zipLoad(isTemplate, true, url, name, isTeacher, newOwner, repoOwner);
 }
 
 getZipAssignment(String name, String url){
-    zipLoad(false, false, url, name, false);
+    return zipLoad(false, false, url, name, false);
 }
 
 zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
@@ -68,7 +69,7 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
         return;
     }
     print("Attempting assignment download...");
-    http.get(url).then((response){
+    return http.get(url).then((response){
         Archive arch;
         try {
             arch = new ZipDecoder().decodeBytes(response.bodyBytes);
@@ -115,7 +116,7 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
             print("Template downloaded to '$id'", GREEN);
         }else print("Assignment downloaded to '$id'", GREEN);
         if (loadCallback != null) {
-            loadCallback();
+            return loadCallback();
         }
     });
 }

@@ -2,5 +2,13 @@ build
 packages
 bin/packages
 web/packages
+test/packages
+tool/packages
+docs/build
+docs/packages
+docs/web/packages
+docs/pubspec.lock
 pubspec.lock
 .pub
+.testing
+.home

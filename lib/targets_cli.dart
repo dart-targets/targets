@@ -38,9 +38,10 @@ String wd = Directory.current.path;
 
 /// Users home directory
 /// Set in main method based on platform
-String home;
+String home = null;
 
 setHome() {
+    if (home!=null) return;
     if(Platform.isWindows){
         home = Platform.environment['USERPROFILE'];
     }else{
@@ -48,7 +49,7 @@ setHome() {
     }
 }
 
-const String version = "0.7.4";
+const String version = "0.7.5";
 
 /// If not null, called by zipLoad when complete
 Function loadCallback = null;
