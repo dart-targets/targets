@@ -60,7 +60,7 @@ Since targets is primarily intended for high school CS courses (there's much bet
 
 To allow student use of targets outside of the command line, version 0.5.0 adds the `targets gui` command. This starts a local web socket server on the student's machine and opens their web browser to [darttargets.com/gui](http://darttargets.com/gui). From here, students can download assignments, run tests, and submit their work without touching the command line. There's even a button to upgrade targets through pub (though this may not work on all setups).
 
-The web interface does not yet support download templates from a custom zip file, but it will soon. If you want to avoid sharing zip URLs with your students but don't want to (or can't) make your templates public, you may want to create a custom web console with the URLs prefilled for your class. You can hook into Targets' support for zip files with the command `get-zip` and arguments `id` and `url`.
+Downloading templates from the zip files using the web console is supported as of 0.7.6.
 
 By default, the local server is hosted on port 7620 (fun fact: this number was reached by adding the ASCII codes of the letters in "targets" and multiplying by 10). You can customize it with `targets gui #`, where # is your preferred port. If using the default interface URL, the default port will automatically be changed in the page that launches by adding "?port=#" to the end.
 

@@ -61,7 +61,7 @@ void handleSocket(WebSocket socket){
         }else if(command == 'get'){
             getAssignment(map['id'], false);
         }else if(command == 'get-zip'){
-            getAssignment(map['id'], map['url']);
+            getZipAssignment(map['id'], map['url']);
         }else if(command == 'check'){
             checkAssign();
         }else if(command == 'update'){

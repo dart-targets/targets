@@ -54,6 +54,7 @@ Future mossRun(){
             }else if(state == "url"){
                 socket.write("end\n");
                 socket.close();
+                print("Results at: $url");
                 openBrowser(line);
             }
         });

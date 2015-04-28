@@ -85,11 +85,19 @@ runTests(){
 
 download(){
     if(socket!=null){
+        String teacher = teacherInput.value;
+        String assign = assignmentInput.value;
         var data = {
             'workingDirectory':dirInput.value,
             'command':'get',
-            'id':teacherInput.value+"/"+assignmentInput.value
+            'id':teacher+"/"+assign
         };
+        if (teacher.startsWith('http://') || 
+            teacher.startsWith('https://')) {
+            data['command'] = 'get-zip';
+            data['id'] = assign;
+            data['url'] = teacher;
+        }
         log("Sending command to Targets...",true);
         socket.send(JSON.encode(data));
     }

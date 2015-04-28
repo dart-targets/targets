@@ -1,3 +1,6 @@
+#### 0.7.6
+  * Proper support for downloading from zip files using the web interface.
+
 #### 0.7.5
   * Internal cleanup
   * Minor bug fixes

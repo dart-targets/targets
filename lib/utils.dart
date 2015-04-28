@@ -39,7 +39,6 @@ copyDirectory(Directory from, Directory to){
 }
  
 openBrowser(url){
-    print("Results at: $url");
     if(Platform.isMacOS){
         Process.start('open', [url]);
     }else if(Platform.isLinux){
