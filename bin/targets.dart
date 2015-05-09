@@ -39,7 +39,7 @@ Future main(var args){
             } else if (rest.length == 1){
                 return getAssignment(rest[0], teacher, template);
             } else if (rest.length == 2 && !teacher){
-                return getZipAssignment(rest[0], rest[0]);
+                return getZipAssignment(rest[0], rest[1]);
             } else invalid(args);
             break;
         case 'check':

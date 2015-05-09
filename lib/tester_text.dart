@@ -43,9 +43,8 @@ void runTests(){
             try{
                 s = t.test();
                 if(s==null)s=0;
-            }catch(e){
-                String error = e.toString().replaceAll("\n"," ");
-                print("Test ${t.name} failed with error: $error", RED);
+            }catch(e, st){
+                print("Test ${t.name} failed with error: $e $st", RED);
             }
             if(s is bool){
                 if(s){
@@ -63,9 +62,8 @@ void runTests(){
             try{
                 result = t.test();
                 if(result==null)result=false;
-            }catch(e){
-                String error = e.toString().replaceAll("\n"," ");
-                print("Test ${t.name} failed with error: $error", RED);
+            }catch(e, st){
+                print("Test ${t.name} failed with error: $e $st", RED);
             }
             String extra = "";
             if(t.error!=null){

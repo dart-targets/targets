@@ -49,7 +49,7 @@ setHome() {
     }
 }
 
-const String version = "0.7.6";
+const String version = "0.7.7";
 
 /// If not null, called by zipLoad when complete
 Function loadCallback = null;

@@ -57,11 +57,11 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
     if(id.contains("/") && fromGitHub) {
         id = id.replaceAll("/", "-");
         var parts = realID.split("/");
-        subdirLoc = parts[1];
-        for (int i = 2; i < parts.length - 1; i++) {
-            subdirLoc += "/" + parts[i];
+        subdirLoc = "";
+        for (int i = 1; i < parts.length - 1; i++) {
+            subdirLoc += parts[i] + "/";
         }
-        subdirLoc += "/targets-" + parts.last;
+        subdirLoc += "targets-" + parts.last;
     }
     if(isTemplate) id = "template";
     if (new Directory("$wd/$id").existsSync()){

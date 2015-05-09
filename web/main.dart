@@ -75,7 +75,7 @@ update(){
 runTests(){
     if(socket!=null){
         var data = {
-            'workingDirectory':dirInput.value+"/"+assignmentInput.value,
+            'workingDirectory':dirInput.value+"/"+assignmentInput.value.replaceAll("/", "-"),
             'command':'check'
         };
         log("Sending command to Targets...",true);
@@ -108,6 +108,14 @@ github(){
     if(user.contains(":")) user = user.split(":")[1];
     var project = assignmentInput.value;
     var url = "https://github.com/$user/targets-$project";
+    if (project.contains("/")) {
+        var parts = project.split("/");
+        url = "https://github.com/$user/${parts[0]}/tree/master/";
+        for (int i = 1; i < parts.length - 1; i++) {
+            url += "${parts[i]}/";
+        }
+        url += "targets-${parts.last}";
+    }
     window.open(url, '_blank');
 }
 

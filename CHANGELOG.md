@@ -1,3 +1,8 @@
+#### 0.7.7
+  * Fix error when downloading templates from subdirectories of repos
+  * Fix issues with subdirectories in web console
+  * Minor bug fixes
+
 #### 0.7.6
   * Proper support for downloading from zip files using the web interface.
 
