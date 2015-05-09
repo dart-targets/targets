@@ -122,7 +122,7 @@ github(){
 submit(){
     if(socket!=null){
         var data = {
-            'workingDirectory':dirInput.value+"/"+assignmentInput.value,
+            'workingDirectory':dirInput.value+"/"+assignmentInput.value.replaceAll("/", "-"),
             'command':'submit',
             'info':nameInput.value+"\n"+emailInput.value+"\n"+sidInput.value
         };

@@ -1,6 +1,7 @@
 #### 0.7.7
   * Fix error when downloading templates from subdirectories of repos
   * Fix issues with subdirectories in web console
+  * Fix issues with subdirectories in `targets submissions` command
   * Minor bug fixes
 
 #### 0.7.6

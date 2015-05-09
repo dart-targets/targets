@@ -18,10 +18,6 @@ getSubmissions(String id){
     }
     String token = info.readAsStringSync();
     List<String> parts = id.split("/");
-    if (parts.length != 2) {
-        print("Invalid assignment id!");
-        return;
-    }
     String teacher = parts[0];
     String owner = teacher;
     if (teacher.contains(":")) {
@@ -29,7 +25,8 @@ getSubmissions(String id){
         teacher = pieces[0];
         owner = pieces[1];
     }
-    String dirname = "$teacher-${parts[1]}";
+    String internal = id.substring(parts[0].length + 1).replaceAll("/", "-");
+    String dirname = "$teacher-$internal";
     Directory dir = new Directory("$wd/$dirname");
     if (dir.existsSync()) {
         print("$dirname already exists in this directory!");
@@ -37,7 +34,7 @@ getSubmissions(String id){
     }
     String url = "http://darttargets.com/results/console_zipper.php";
     print("Attempting download...");
-    return http.post(url, body: {"token": token, "owner": teacher, "project": parts[1]})
+    return http.post(url, body: {"token": token, "owner": teacher, "project": internal})
         .then((response) {
         if (response.body == "Invalid authentication") {
             print("You aren't allowed to download submissions for that assignment");
