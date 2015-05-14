@@ -88,7 +88,7 @@ class IOTarget extends TestTarget{
                 pstr+="'$str',";
             }
             new File(".tempscript.dart").writeAsStringSync('''"""+io_script+r"""''');
-            String out = Process.runSync('dart',['.tempscript.dart']).stdout;
+            String out = Process.runSync('dart',['.tempscript.dart']).stdout.trim();
             out = out.replaceAll("\r\n","\n");
             if(postCommand!=null){
                 if(postCommand is String) runCommand(postCommand);
@@ -98,9 +98,13 @@ class IOTarget extends TestTarget{
             }
             if(Platform.isWindows) Process.runSync('del',['.tempscript.dart'],runInShell:true);
             else Process.runSync('rm',['.tempscript.dart']);
-            bool result = output==out||output+"\n"==out;
+            bool result = output==out || output+"\n"==out || output==out+"\n";
             if(!result){
-                this.error = "Expected $output, got $out";
+                if (output == "") {
+                    this.error = out;
+                } else {
+                    this.error = "Expected $output, got $out";
+                }
             }
             return result;
         };

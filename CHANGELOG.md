@@ -1,3 +1,8 @@
+#### 0.7.8
+  * Add support for excluding specific files from extension wildcard by adding a `!` before the file
+  * See `targets get dart-targets/enigma/java` for an example
+  * Slight changes to output of `IOTarget`
+
 #### 0.7.7
   * Fix error when downloading templates from subdirectories of repos
   * Fix issues with subdirectories in web console

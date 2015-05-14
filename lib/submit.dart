@@ -56,20 +56,26 @@ submit(bool manual, {String withInfo:null, callback:null}){
                 String enc_email = Base64.encode(email);
                 String infoString = Base64.encode(basicInfo);
                 String data = "$owner;$id;";
-                for(String line in lines){
+                var fileData = {};
+                for (String line in lines) {
                     line = line.trim();
-                    if(line.startsWith("*.")){
+                    if (line.startsWith("*.")) {
                         String extension = line.substring(1);
                         List<File> files = getFilesWithExtension(extension);
                         for(File f in files){
                             String relpath = f.path.substring(Directory.current.path.length+1);
                             String filedata = f.readAsStringSync();
-                            data += relpath+","+Base64.encode(filedata)+"|";
+                            fileData[relpath] = filedata;
                         }
-                    }else{
+                    } else if (line.startsWith("!")) {
+                        fileData.remove(line.substring(1));
+                    } else {
                         String filedata = new File(wd+"/"+line).readAsStringSync();
-                        data += line+","+Base64.encode(filedata)+"|";
+                        fileData[line] = filedata;
                     }
+                }
+                for (var key in fileData.keys) {
+                    data += key + "," + Base64.encode(fileData[key]) + "|";
                 }
                 data = data.substring(0,data.length-1) + ";" + infoString;
                 String fullData = Base64.encode(data).replaceAll("\r\n","");
