@@ -48,7 +48,7 @@ Starting in 0.6.0, Targets supports easy submission of student code to [Moss](ht
 
 ### Languages Other Than Dart ###
 
-Targets is bested suited for testing Dart code. However, version 0.2.3 added support for `IOTarget`, which lets you test output for given input sent to a program. To see an example of how `IOTarget` works, `targets init java-example`. I've tested simple examples on both OSX and Windows, but testing more complex programs may result in some issues, particularly cross-platform. If you use `IOTarget`, make sure to use `targets check` on a completed version of your template on each OS that your students may use.
+Targets is best suited for testing Dart code. However, version 0.2.3 added support for `IOTarget`, which lets you test output for given input sent to a program. To see an example of how `IOTarget` works, `targets init java-example`. I've tested simple examples on both OSX and Windows, but testing more complex programs may result in some issues, particularly cross-platform. If you use `IOTarget`, make sure to use `targets check` on a completed version of your template on each OS that your students may use.
 
 Prior to 0.7.2, `IOTarget` tests could not be scored. With the new properties for `TestTarget` (which `IOTarget` extends) in 0.7.2, each `IOTarget` can add an all-or-nothing amount of points to the total score.
 
@@ -65,6 +65,10 @@ Downloading templates from the zip files using the web console is supported as o
 By default, the local server is hosted on port 7620 (fun fact: this number was reached by adding the ASCII codes of the letters in "targets" and multiplying by 10). You can customize it with `targets gui #`, where # is your preferred port. If using the default interface URL, the default port will automatically be changed in the page that launches by adding "?port=#" to the end.
 
 The source of the web interface is included in the pub package and on GitHub if you want to customize it. To have Targets launch your new version, use `targets gui # http://yourinterface.com`. You can put your custom in a shell script to allow your students to launch the interface with one click.
+
+### Sample Project: Enigma ###
+
+In addition to a few small templates hosted on the `dart-targets` GitHub, I'm currently developing a large sample project for Targets in which students build an Enigma machine simulator and then attempt to break the code. The project is hosted [here](https://github.com/dart-targets/enigma). Draft templates are currently available in Dart and Java. A Python version is under development.
 
 ### Installing ###
 
