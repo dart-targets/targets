@@ -157,7 +157,7 @@ class IOTarget extends TestTarget{
 
     /// (e.g.) make("python3 square.py", new InputOutput("Test","4","16"))
     static IOTarget make(String command, InputOutput io){
-        if(io.args != null) command += "${io.args}";
+        if(io.args != null) command += " ${io.args}";
         IOTarget t = new IOTarget(io.name, command, io.input, io.output);
         t.points = io.points;
         t.uncounted = io.uncounted;

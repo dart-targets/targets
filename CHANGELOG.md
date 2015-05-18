@@ -1,3 +1,6 @@
+#### 0.7.9
+  * Fixed bug in `IOTarget.make` and `IOTarget.makeMulti` that broke tests on `InputOutput` objects with arguments.
+
 #### 0.7.8
   * Add support for excluding specific files from extension wildcard by adding a `!` before the file
   * See `targets get dart-targets/enigma/java` for an example
