@@ -48,9 +48,9 @@ Future main(var args){
             if (rest.length == 0){
                 return runGuiServer(7620, !cmd['server']);
             } else if(rest.length == 2){
-                return runGuiServer(int.parse(rest[1]), !cmd['server'], rest[2]);
+                return runGuiServer(int.parse(rest[0]), !cmd['server'], rest[1]);
             } else if(rest.length == 1){
-                return runGuiServer(int.parse(rest[1]), !cmd['server']);
+                return runGuiServer(int.parse(rest[0]), !cmd['server']);
             } else invalid(args);
             break;
         case 'submit':
