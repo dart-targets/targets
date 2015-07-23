@@ -7,6 +7,11 @@ import 'dart:async';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:redstone_mapper/mapper.dart' as mapper;
+import 'package:redstone_mapper/mapper_factory.dart';
+
+import 'package:targets/models.dart';
+
 /// Student commands not related to submission
 part 'student.dart';
 
@@ -40,6 +45,9 @@ String wd = Directory.current.path;
 /// Set in main method based on platform
 String home = null;
 
+/// Default server
+String serverRoot = "http://localhost:8080";
+
 setHome() {
     if (home!=null) return;
     if(Platform.isWindows){
@@ -49,7 +57,29 @@ setHome() {
     }
 }
 
-const String version = "0.7.9";
+Map<String, String> settings;
+
+loadUserSettings() async {
+    File file = new File("$home/.targets-settings");
+    if(!file.existsSync()){
+        settings = {
+            "email": null,
+            "moss": null,
+            "oauth": null
+        };
+        return;
+    }
+    String json = await file.readAsString();
+    settings = JSON.decode(json);
+}
+
+saveUserSettings() {
+    File file = new File("$home/.targets-settings");
+    String json = JSON.encode(settings);
+    file.writeAsStringSync(json);
+}
+
+const String version = "0.8.0-experimental";
 
 /// If not null, called by zipLoad when complete
 Function loadCallback = null;

@@ -1,5 +1,7 @@
 ## targets ##
 
+**Note: This branch is designed to connect to the [new Targets server](https://github.com/dart-targets/targets_server) that is currently being developed to replace the existing PHP scripts. DO NOT MERGE**
+
 [![Build Status](https://travis-ci.org/dart-targets/targets.svg)](https://travis-ci.org/dart-targets/targets)
 
 Targets is an assignment manager and autograder intended for high school CS classes that uses GitHub to download assignment templates.

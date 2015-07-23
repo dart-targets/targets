@@ -58,7 +58,8 @@ void testStudentCommands() {
 }
 
 void testTeacherCommands() {
-    test("Download Submissions", () async{
+    // old system
+    /*test("Download Submissions", () async{
         await targets("submissions", "targetsbot:dart-targets/example");
         String subs = wd + "/targetsbot-example";
         Directory d = new Directory(subs);
@@ -76,7 +77,7 @@ void testTeacherCommands() {
         String contents = new File(subs + "/log.txt").readAsStringSync();
         expect(contents, contains(expectedCorrect));
         expect(contents, contains(expectedIncorrect));
-    });
+    });*/
 }
 
 String expectedCorrect = """jthakar-berkeley.edu

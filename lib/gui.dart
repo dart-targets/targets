@@ -6,16 +6,15 @@ HttpServer server;
 int currentPort;
 String currentUrl;
 
-const String defaultURL = "http://darttargets.com/gui";
-
-runGuiServer(port, [browser=true, url=defaultURL]){
+runGuiServer(port, [browser=true]){
+    var url = "$serverRoot/console";
     return HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
         currentPort = port;
         currentUrl = url;
-        if(port!=7620 && url==defaultURL) url += "?port=$port";
-        print("Connect to ws://localhost:$port at ${url.substring(7)}",GREEN);
-        print("This process must remain running for the GUI to work.");
+        if(port!=7620 && url==defaultURL) url += "#$port";
+        print("Connect to ws://localhost:$port at $url",GREEN);
+        print("This process must remain running for the console to work.");
         if(browser) openBrowser(url);
         server.listen((HttpRequest request) {
             if (WebSocketTransformer.isUpgradeRequest(request)){
@@ -23,7 +22,7 @@ runGuiServer(port, [browser=true, url=defaultURL]){
             }
             else {
                 request.response.statusCode = HttpStatus.FORBIDDEN;
-                request.response.reasonPhrase = "Please connect from darttargets.com/gui";
+                request.response.reasonPhrase = "Please connect from $url";
                 request.response.close();
             }
         });

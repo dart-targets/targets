@@ -4,11 +4,14 @@ import 'package:args/args.dart';
 import 'dart:async';
 import 'dart:io';
 
-Future main(var args){
+Future main(var args) async {
     setHome();
+    await loadUserSettings();
     
     var results = parseArgs(args);
     var cmd = results.command;
+    
+    serverRoot = results['server'];
     
     if (results['version'] || args.length == 0) {
         info();
@@ -28,7 +31,7 @@ Future main(var args){
     
     switch (cmd.name) {
         case 'setup':
-            return setup();
+            return print("Student info is now provided with each submission.");
         case 'get':
         case 'init':
         case 'template':
@@ -44,17 +47,16 @@ Future main(var args){
             break;
         case 'check':
             return checkAssign();
-        case 'gui':
+        case 'console':
+        case 'gui': // legacy
             if (rest.length == 0){
-                return runGuiServer(7620, !cmd['server']);
-            } else if(rest.length == 2){
-                return runGuiServer(int.parse(rest[0]), !cmd['server'], rest[1]);
+                return runGuiServer(7620, !cmd['background']);
             } else if(rest.length == 1){
-                return runGuiServer(int.parse(rest[0]), !cmd['server']);
+                return runGuiServer(int.parse(rest[0]), !cmd['background']);
             } else invalid(args);
             break;
         case 'submit':
-            return submit(cmd['manual']);
+            return submitCLI();
         case 'submissions':
             if (rest.length > 0) {
                 return getSubmissions(rest[0]);
@@ -84,14 +86,17 @@ ArgResults parseArgs(args) {
     parser.addFlag('help', abbr: 'h', negatable: false, help: 'Display list of commands');
     parser.addFlag('version', abbr: 'v', negatable: false, 
                 help: 'Display the application version.');
+    parser.addOption('server', help: 'Change the default server', defaultsTo: serverRoot);
     
     parser.addCommand('setup');
     parser.addCommand('get');
     parser.addCommand('check');
-    var pGui = parser.addCommand('gui');
-    pGui.addFlag('server', negatable: false, help: "Doesn't open web browser automatically");
+    var pGui = parser.addCommand('console');
+    pGui.addFlag('background', negatable: false, help: "Doesn't open web browser automatically");
+    // legacy
+    parser.addCommand('gui', pGui);
+    
     var pSubmit = parser.addCommand('submit');
-    pSubmit.addFlag('manual', negatable: false, help: "Displays validation URL instead of opening browser");
     
     parser.addCommand('init');
     parser.addCommand('submissions');
@@ -113,12 +118,11 @@ ArgResults parseArgs(args) {
 help() {
     print("Usage: targets <command>");
     print("Student Commands:");
-    print("   setup             Sets up targets for user");
     print("   get <assignment>  Downloads assignment with name from GitHub");
     print("   get <name> <url>  Downloads assignment with name from zip file");
     print("   check             Runs tests on assignment");
     print("   submit            Submits assignment to server");
-    print("   gui               Opens targets web interface");
+    print("   console           Opens targets web interface");
     print("");
     print("Teacher Commands:");
     print("   init              Downloads template from GitHub");
@@ -128,10 +132,12 @@ help() {
     print("   batch             Grades multiple submissions downloaded from server");
     print("   distribute        Combines template with each student's code");
     print("   moss              Submits submissions to Moss for similarity detection");
+    print("Options:");
+    print("   --server          Change server from default ($serverRoot)");
     print("");
     print("Teachers should upload completed templates with tests to GitHub");
     print("Repo url with form github.com/username/targets-project");
-    print("can be downloaded with targets get as username/project");
+    print("can be downloaded with `targets get username/project`");
 }
 
 info() {
