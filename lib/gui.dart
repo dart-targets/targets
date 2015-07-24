@@ -101,7 +101,7 @@ respond(msg, original) {
 
 consoleGet(msg) async {
     String id = msg['assignment'];
-    if (msg.containsKey('url')) {
+    if (msg.containsKey('url') && msg['url'] != null) {
         await getZipAssignment(id, msg['url']);
     } else {
         await getAssignment(id, false);

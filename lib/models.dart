@@ -2,7 +2,6 @@ library models;
 
 import 'package:crypto/crypto.dart';
 
-import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper/mapper.dart';
 
 class Student {
@@ -34,8 +33,6 @@ class Course {
     /// Returns true if [student] is allowed in course
     /// Returns false otherwise
     bool allows(Student student) {
-        print(encodeJson(student));
-        print(encodeJson(this));
         for (String allowed in allowedStudents) {
             if (allowed == student.email || 
                     (allowed.startsWith("@") &&
