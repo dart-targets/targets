@@ -3,7 +3,7 @@ part of targets_cli;
 /// This adds support for Moss similarity detection on any set of student
 /// submissions that supports the `targets batch` command
 
-Socket socket;
+Socket mossSocket;
 
 String id;
 
@@ -45,33 +45,33 @@ Future mossRun(){
         }
     }
     return Socket.connect("moss.stanford.edu", 7690).then((newSocket){
-        socket = newSocket;
-        socket.transform(new Utf8Decoder())
+        mossSocket = newSocket;
+        mossSocket.transform(new Utf8Decoder())
                 .transform(new LineSplitter())
                 .listen((String line){
             if(state == "language"){
                 receiveLanguageValidation(line);
             }else if(state == "url"){
-                socket.write("end\n");
-                socket.close();
+                mossSocket.write("end\n");
+                mossSocket.close();
                 print("Results at: $line");
                 openBrowser(line);
             }
         });
-        socket.write("moss $id\n");
-        socket.write("directory 1\n");
-        socket.write("X 0\n");
-        socket.write("maxmatches 10\n");
-        socket.write("show 250\n");
+        mossSocket.write("moss $id\n");
+        mossSocket.write("directory 1\n");
+        mossSocket.write("X 0\n");
+        mossSocket.write("maxmatches 10\n");
+        mossSocket.write("show 250\n");
         state = "language";
-        socket.write("language $lang\n");
+        mossSocket.write("language $lang\n");
     });
 }
 
 void receiveLanguageValidation(result){
     if(result == null || result.trim().toLowerCase() != "yes"){
         print("Invalid language");
-        socket.close();
+        mossSocket.close();
         exit(0);
     }else{
         List<MossFile> files = [];
@@ -105,13 +105,13 @@ void receiveLanguageValidation(result){
             var size = ASCII.encode(file.contents).length;
             var path = file.path.replaceAll(" ","_");
             String header = "file $fid $lang $size $path\n";
-            socket.write(header);
-            socket.write(file.contents+"");
+            mossSocket.write(header);
+            mossSocket.write(file.contents+"");
         }
         print("Code uploaded. Awaiting response...");
         state = "url";
         String time = new DateTime.now().toString();
-        socket.write("query 0 Submitted via Targets at $time\n");
+        mossSocket.write("query 0 Submitted via Targets at $time\n");
     }
 }
 

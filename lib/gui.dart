@@ -4,14 +4,12 @@ part of targets_cli;
 
 HttpServer server;
 int currentPort;
-String currentUrl;
 
 runGuiServer(port, [browser=true]){
     var url = "$serverRoot/console";
     return HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
         currentPort = port;
-        currentUrl = url;
         if(port!=7620 && url==defaultURL) url += "#$port";
         print("Connect to ws://localhost:$port at $url",GREEN);
         print("This process must remain running for the console to work.");
@@ -29,14 +27,19 @@ runGuiServer(port, [browser=true]){
     });
 }
 
-var lastSocket;
+var socket;
 
-void handleSocket(WebSocket socket){
-    if(lastSocket!=null){
-        lastSocket.add(JSON.encode({'type':'newclient'}));
+var serverPrint;
+var clientPrint;
+
+handleSocket(WebSocket newSocket) async {
+    // not sure if this is actually necessary
+    if(socket!=null){
+        socket.add(JSON.encode({'type':'newclient'}));
     }
-    lastSocket = socket;
-    var serverPrint = (String str, [String type=PLAIN]){
+    socket = newSocket;
+    serverPrint = (str, [String type=PLAIN]){
+        str = str.toString();
         if(type==PLAIN||Platform.isWindows){
             stdout.writeln(str);
         }else if(type==RED){
@@ -47,43 +50,130 @@ void handleSocket(WebSocket socket){
             stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
         }
     };
-    var clientPrint = (str, [type=PLAIN]) => socket.add(JSON.encode({'type':'log','text':str}));
+    clientPrint = (str, [type=PLAIN]) => send({'type':'log','text':str});
     print = clientPrint;
-    socket.listen((String s) {
-        var map = JSON.decode(s);
-        String command = map['command'];
-        wd = map['workingDirectory'];
-        if(command == 'submit'){
-            submit(false, withInfo:map['info'], callback:(url){
-                socket.add(JSON.encode({'type':'submit','url':url}));
+    socket.listen((String s) async {
+        try {
+            var map = JSON.decode(s);
+            switch (map['command']) {
+                case 'get':
+                    return await consoleGet(map);
+                case 'test':
+                    return await consoleTest(map);
+                case 'submit':
+                    return await consoleSubmit(map);
+                case 'update':
+                    return await consoleUpdate(map);
+                case 'directory':
+                    return await consoleDirectory(map);
+                case 'read-file':
+                    return await consoleReadFile(map);
+                case 'write-file':
+                    return await consoleWriteFile(map);
+            }
+        } catch (e) {
+            send({
+                'type': 'error',
+                'exception': '$e'
             });
-        }else if(command == 'get'){
-            getAssignment(map['id'], false);
-        }else if(command == 'get-zip'){
-            getZipAssignment(map['id'], map['url']);
-        }else if(command == 'check'){
-            checkAssign();
-        }else if(command == 'update'){
-            serverPrint("Update triggered. Server about to close...");
-            serverPrint(Process.runSync('pub',['global','activate','targets']).stdout);
-            socket.add(JSON.encode({'type':'reboot'}));
-            new Future.delayed(new Duration(milliseconds:2000),(){
-                server.close(force:true);
-                serverPrint("Starting new instance...");
-                Process.start('pub',['global','run','targets', 'gui', '--server', '$currentPort', 
-                                            currentUrl], runInShell:true).then((process) {
-                    process.stdout.transform(new Utf8Decoder())
-                            .transform(new LineSplitter()).listen((String line){
-                        serverPrint(line);
-                    });
-                });
-            });
+            serverPrint(e);
         }
     },onDone: () {
         print = serverPrint;
     });
-    socket.add(JSON.encode({'type':'init',
-        'workingDirectory':Directory.current.path,
-        'version':version
-    }));
+    send({
+        'type': 'init',
+        'directory': Directory.current.path,
+        'version': version
+    });
+}
+
+send(msg) {
+   socket.add(JSON.encode(msg)); 
+}
+
+respond(msg, original) {
+    msg['type'] = 'response';
+    msg['command'] = original['command'];
+    msg['cmd-id'] = original['cmd-id'];
+    send(msg);
+}
+
+consoleGet(msg) async {
+    String id = msg['assignment'];
+    if (msg.containsKey('url')) {
+        await getZipAssignment(id, msg['url']);
+    } else {
+        await getAssignment(id, false);
+    }
+    respond({}, msg);
+}
+
+consoleTest(msg) async {
+    wd = Directory.current.path + "/" + msg['assignment'];
+    await checkAssign();
+    wd = Directory.current.path;
+    respond({}, msg);
+}
+
+consoleSubmit(msg) async {
+    wd = Directory.current.path + "/" + msg['assignment'];
+    String hash = await uploadSubmission(msg['email'], msg['note']);
+    wd = Directory.current.path;
+    respond({'hash': hash}, msg);
+}
+
+consoleUpdate(msg) async {
+    serverPrint("Update requested. Server about to close...");
+    serverPrint(Process.runSync('pub',['global','activate','targets']).stdout);
+    new Future.delayed(new Duration(milliseconds:2000),(){
+        server.close(force:true);
+        serverPrint("Starting new instance...");
+        Process.start('pub',['global','run','targets', 'console', '--background', '$currentPort'], runInShell:true).then((process) {
+            process.stdout.transform(new Utf8Decoder())
+                    .transform(new LineSplitter()).listen((String line){
+                serverPrint(line);
+            });
+        });
+    });
+}
+
+consoleDirectory(msg) async {
+    var tree = await findTree(Directory.current);
+    respond({'tree': tree}, msg);
+}
+
+findTree(Directory dir) async {
+    var tree = {};
+    int length = dir.absolute.path.length;
+    await for (var file in dir.list()) {
+        file = file.absolute;
+        var path = file.path.substring(length + 1);
+        if (file is File) {
+            tree[path] = path;
+        } else if (file is Directory) {
+            tree[path] = await findTree(file);
+        }
+   }
+   return tree;
+}
+
+consoleReadFile(msg) async {
+    File file = new File(msg['file']);
+    print(file.absolute.path);
+    print(wd);
+    if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
+        throw new Exception("Console may only access files within root directory");
+    }
+    String contents = await file.readAsString();
+    respond({'contents': contents}, msg);
+}
+
+consoleWriteFile(msg) async {
+    File file = new File(msg['file']);
+    if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
+        throw new Exception("Console may only access files within root directory");
+    }
+    await file.writeAsString(msg['contents']);
+    respond({}, msg);
 }

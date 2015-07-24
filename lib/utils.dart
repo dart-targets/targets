@@ -56,6 +56,7 @@ const String BLUE = "blue";
 /// Let's us print with colors if we're on Unix
 /// Also lets us rebind print to redirect output
 Function print = (String str, [String type=PLAIN]){
+    str = str.toString();
     if(type==PLAIN||Platform.isWindows){
         stdout.writeln(str);
     }else if(type==RED){
