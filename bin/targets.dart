@@ -46,7 +46,7 @@ Future main(var args) async {
             } else invalid(args);
             break;
         case 'check':
-            return checkAssign();
+            return checkAssign(cmd['json']);
         case 'console':
         case 'gui': // legacy
             if (rest.length == 0){
@@ -63,7 +63,7 @@ Future main(var args) async {
             } else invalid(args);
             break;
         case 'batch':
-            batch();
+            batch(cmd['json']);
             break;
         case 'distribute':
             distribute();
@@ -90,7 +90,8 @@ ArgResults parseArgs(args) {
     
     parser.addCommand('setup');
     parser.addCommand('get');
-    parser.addCommand('check');
+    var pCheck = parser.addCommand('check');
+    pCheck.addFlag('json', abbr: 'j', negatable: false, help: 'Outputs test results as JSON');
     var pGui = parser.addCommand('console');
     pGui.addFlag('background', negatable: false, help: "Doesn't open web browser automatically");
     // legacy
@@ -101,7 +102,8 @@ ArgResults parseArgs(args) {
     parser.addCommand('init');
     parser.addCommand('submissions');
     parser.addCommand('template');
-    parser.addCommand('batch');
+    var pBatch = parser.addCommand('batch');
+    pBatch.addFlag('json', abbr: 'j', negatable: false, help: 'Outputs test results as JSON');
     parser.addCommand('distribute');
     var pMoss = parser.addCommand('moss');
     pMoss.addFlag('help', abbr: 'h', negatable: false, help: 'Display list of Moss languages');
@@ -134,6 +136,7 @@ help() {
     print("   moss              Submits submissions to Moss for similarity detection");
     print("Options:");
     print("   --server          Change server from default ($serverRoot)");
+    print("   --json            Outputs test results (for check or batch commands) as JSON");
     print("");
     print("Teachers should upload completed templates with tests to GitHub");
     print("Repo url with form github.com/username/targets-project");

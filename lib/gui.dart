@@ -160,8 +160,6 @@ findTree(Directory dir) async {
 
 consoleReadFile(msg) async {
     File file = new File(msg['file']);
-    print(file.absolute.path);
-    print(wd);
     if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
         throw new Exception("Console may only access files within root directory");
     }

@@ -73,7 +73,8 @@ getSubmissions(String id){
     });
 }
 
-batch(){
+batch([bool useJson = false]){
+    if (useJson) return batchJson();
     File tests = new File("$wd/targets/tests.dart");
     File alttests = new File("$wd/template/targets/tests.dart");
     if(!tests.existsSync()&&!alttests.existsSync()){
@@ -113,6 +114,37 @@ batch(){
     }
     new File("$wd/log.txt").writeAsStringSync(log);
     print("Tests complete. Results outputted to 'log.txt'",GREEN);
+}
+
+batchJson() {
+    File tests = new File("$wd/targets/tests.dart");
+    File alttests = new File("$wd/template/targets/tests.dart");
+    if(!tests.existsSync()&&!alttests.existsSync()){
+        print("You need to add a template to this directory first!",RED);
+        return;
+    }
+    var results = {};
+    var directs = new Directory(wd).listSync();
+    for(var dir in directs){
+        if(dir is Directory){
+            String dirpath = dir.path.split(Platform.pathSeparator).last;
+            if(dirpath!="template"&&dirpath!="distributed"){
+                print("Testing $dirpath...");
+                Directory temp = new Directory("$wd/.temp");
+                temp.createSync();
+                copyDirectory(new Directory("$wd/template"), temp);
+                copyDirectory(dir, temp);
+                new File("$wd/.temp/targets/tester.dart").writeAsStringSync(tester_dart);
+                new File("$wd/.temp/targets/helpers.dart").writeAsStringSync(helpers_dart);
+                var path = "$wd/.temp";
+                var res = Process.runSync("dart",["targets/tester.dart", "json"], workingDirectory: path);
+                results[dirpath] = JSON.decode(res.stdout);
+                temp.deleteSync(recursive:true);
+            }
+        }
+    }
+    new File("$wd/results.json").writeAsStringSync(JSON.encode(results));
+    print("Tests complete. Results outputted to 'results.json'",GREEN);
 }
 
 distribute(){

@@ -3,7 +3,7 @@ part of targets_cli;
 /// Most commands for students
 /// Submission and setup is in submit.dart
 
-checkAssign(){
+checkAssign([bool useJson = false]){
     if(!new File("$wd/targets/tester.dart").existsSync()){
         print("You are not in an assignment directory!",RED);
         return;
@@ -12,7 +12,11 @@ checkAssign(){
     File helperFile = new File("$wd/targets/helpers.dart");
     testerFile.writeAsStringSync(tester_dart);
     helperFile.writeAsStringSync(helpers_dart);
-    return Process.start("dart",['targets/tester.dart'], workingDirectory:wd).then((process) {
+    var args = ['targets/tester.dart'];
+    if (useJson) {
+        args.add('json');
+    }
+    return Process.start("dart", args, workingDirectory:wd).then((process) {
         process.stdout.transform(new Utf8Decoder())
                 .transform(new LineSplitter())
                 .listen((String line){
