@@ -110,10 +110,21 @@ consoleGet(msg) async {
 }
 
 consoleTest(msg) async {
+    if (!msg.containsKey('json')) {
+        msg['json'] = false;
+    }
+    String output = "";
+    if (msg['json']) {
+        print = (text) => output += text + '\n';
+    }
     wd = Directory.current.path + "/" + msg['assignment'];
-    await checkAssign();
+    await checkAssign(msg['json']);
     wd = Directory.current.path;
-    respond({}, msg);
+    if (msg['json']) {
+        respond({'results': output}, msg);
+    } else {
+        respond({}, msg);
+    }
 }
 
 consoleSubmit(msg) async {
