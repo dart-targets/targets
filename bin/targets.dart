@@ -57,11 +57,6 @@ Future main(var args) async {
             break;
         case 'submit':
             return submitCLI();
-        case 'submissions':
-            if (rest.length > 0) {
-                return getSubmissions(rest[0]);
-            } else invalid(args);
-            break;
         case 'batch':
             batch(cmd['json']);
             break;
@@ -100,7 +95,6 @@ ArgResults parseArgs(args) {
     var pSubmit = parser.addCommand('submit');
     
     parser.addCommand('init');
-    parser.addCommand('submissions');
     parser.addCommand('template');
     var pBatch = parser.addCommand('batch');
     pBatch.addFlag('json', abbr: 'j', negatable: false, help: 'Outputs test results as JSON');
@@ -118,29 +112,28 @@ ArgResults parseArgs(args) {
 }
 
 help() {
-    print("Usage: targets <command>");
+    print("Run `targets console` to open the web interface (for both students and teachers)");
+    print("");
+    print("Command Line Usage: targets <command>");
     print("Student Commands:");
     print("   get <assignment>  Downloads assignment with name from GitHub");
     print("   get <name> <url>  Downloads assignment with name from zip file");
     print("   check             Runs tests on assignment");
     print("   submit            Submits assignment to server");
-    print("   console           Opens targets web interface");
     print("");
     print("Teacher Commands:");
     print("   init              Downloads template from GitHub");
     print("   init <assignment> Downloads assignment from GitHub as template");
-    print("   submissions <id>  Downloads all submissions and template for assignment");
     print("   template <assign> Like init, but downloads to folder called 'template'");
-    print("   batch             Grades multiple submissions downloaded from server");
+    print("   batch             Grades multiple submissions previously downloaded from server");
     print("   distribute        Combines template with each student's code");
     print("   moss              Submits submissions to Moss for similarity detection");
+    print("   Submissions must now be downloaded through the web console.");
     print("Options:");
     print("   --server          Change server from default ($serverRoot)");
     print("   --json            Outputs test results (for check or batch commands) as JSON");
+    print("   --background      Does not open the web interface when running `targets console`");
     print("");
-    print("Teachers should upload completed templates with tests to GitHub");
-    print("Repo url with form github.com/username/targets-project");
-    print("can be downloaded with `targets get username/project`");
 }
 
 info() {

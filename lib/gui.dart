@@ -70,6 +70,10 @@ handleSocket(WebSocket newSocket) async {
                     return await consoleReadFile(map);
                 case 'write-file':
                     return await consoleWriteFile(map);
+                case 'save-submissions':
+                    return await consoleSaveSubmissions(map);
+                case 'batch-grade':
+                    return await consoleBatchGrade(map);
             }
         } catch (e) {
             send({
@@ -185,4 +189,16 @@ consoleWriteFile(msg) async {
     }
     await file.writeAsString(msg['contents']);
     respond({}, msg);
+}
+
+consoleSaveSubmissions(msg) async {
+    await saveSubmissions(msg['templateId'], msg['directory'], msg['submissions']);
+    respond({}, msg);
+}
+
+consoleBatchGrade(msg) async {
+    wd = Directory.current.path + '/' + msg['directory'];
+    var results = await batchJson();
+    wd = Directory.current.path;
+    respond({'results': results}, msg);
 }
