@@ -4,7 +4,8 @@ part of targets_cli;
 /// Moss-related code is in moss.dart
 
 saveSubmissions(String templateId, String directory, var data) async {
-    await new Directory("$wd/$directory").create();
+    String working = wd;
+    await new Directory("$working/$directory").create();
     for (var subm in data) {
         var info = {
             'course': subm['course'],
@@ -14,23 +15,23 @@ saveSubmissions(String templateId, String directory, var data) async {
             'time': subm['time']
         };
         String studentDir = subm['student'].replaceAll('@', '-at-');
-        await new Directory('$wd/$directory/$studentDir').create();
-        await new File('$wd/$directory/$studentDir/info.json').writeAsString(JSON.encode(info));
+        await new Directory('$working/$directory/$studentDir').create();
+        await new File('$working/$directory/$studentDir/info.json').writeAsString(JSON.encode(info));
         for (var file in subm['files'].keys) {
             String contents = subm['files'][file];
-            var fileObj = new File('$wd/$directory/$studentDir/$file');
+            var fileObj = new File('$working/$directory/$studentDir/$file');
             await fileObj.create(recursive: true);
             await fileObj.writeAsString(contents);
         }
     }
     print("Downloading template...");
-    var oldwd = wd;
-    wd = wd + '/$directory';
+    var oldwd = working;
+    working = working + '/$directory';
     var oldprint = print;
     print = (a, [b]){};
     await getAssignment(templateId, true, true);
     print = oldprint;
-    wd = oldwd;
+    working = oldwd;
 }
 
 batch([bool useJson = false]) async {
@@ -67,7 +68,7 @@ batch([bool useJson = false]) async {
                 copyDirectory(dir, temp);
                 new File("$wd/.temp/targets/tester.dart").writeAsStringSync(tester_dart);
                 new File("$wd/.temp/targets/helpers.dart").writeAsStringSync(helpers_dart);
-                var path = "$wd/.temp";
+                var path = "$wd/.temp/";
                 var res = Process.runSync("dart",["targets/tester.dart"], workingDirectory: path);
                 log+=res.stdout;
                 log+=res.stderr;
@@ -89,8 +90,9 @@ batch([bool useJson = false]) async {
 }
 
 batchJson() async {
-    File jsonFile = new File("$wd/template/targets/tests.json");
-    File tests = new File("$wd/template/targets/tests.dart");
+    String working = wd;
+    File jsonFile = new File("$working/template/targets/tests.json");
+    File tests = new File("$working/template/targets/tests.dart");
     if (jsonFile.existsSync()) {
         var config = JSON.decode(jsonFile.readAsStringSync());
         var testsdart = buildTestsDart(config);
@@ -101,19 +103,19 @@ batchJson() async {
         return {'error': 'No template'};
     }
     var results = {};
-    await for (var dir in new Directory(wd).list()){
+    await for (var dir in new Directory(working).list()){
         if(dir is Directory){
             String dirpath = dir.path.split(Platform.pathSeparator).last;
             if(dirpath!="template"&&dirpath!="distributed"&&dirpath!='.temp'){
                 var email = dirpath.replaceAll('-at-', '@');
                 print("Testing $email...");
-                Directory temp = new Directory("$wd/.temp");
+                Directory temp = new Directory("$working/.temp");
                 temp.createSync();
-                copyDirectory(new Directory("$wd/template"), temp);
+                copyDirectory(new Directory("$working/template"), temp);
                 copyDirectory(dir, temp);
-                await new File("$wd/.temp/targets/tester.dart").writeAsString(tester_dart);
-                await new File("$wd/.temp/targets/helpers.dart").writeAsString(helpers_dart);
-                var path = "$wd/.temp";
+                await new File("$working/.temp/targets/tester.dart").writeAsString(tester_dart);
+                await new File("$working/.temp/targets/helpers.dart").writeAsString(helpers_dart);
+                var path = "$working/.temp/";
                 var res = await Process.run("dart",["targets/tester.dart", "json"], workingDirectory: path);
                 try {
                     results[email] = JSON.decode(res.stdout);

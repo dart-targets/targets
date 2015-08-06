@@ -4,26 +4,27 @@ part of targets_cli;
 /// Submission and setup is in submit.dart
 
 checkAssign([bool useJson = false]){
-    var jsonFile = new File("$wd/targets/tests.json");
-    var testsFile = new File("$wd/targets/tests.dart");
+    String working = wd;
+    var jsonFile = new File("$working/targets/tests.json");
+    var testsFile = new File("$working/targets/tests.dart");
     if (jsonFile.existsSync()) {
         var config = JSON.decode(jsonFile.readAsStringSync());
         var testsdart = buildTestsDart(config);
         testsFile.writeAsStringSync(testsdart);
     }
-    if(!new File("$wd/targets/tests.dart").existsSync()){
+    if(!new File("$working/targets/tests.dart").existsSync()){
         print("You are not in an assignment directory!",RED);
         return;
     }
-    File testerFile = new File("$wd/targets/tester.dart");
-    File helperFile = new File("$wd/targets/helpers.dart");
+    File testerFile = new File("$working/targets/tester.dart");
+    File helperFile = new File("$working/targets/helpers.dart");
     testerFile.writeAsStringSync(tester_dart);
     helperFile.writeAsStringSync(helpers_dart);
     var args = ['targets/tester.dart'];
     if (useJson) {
         args.add('json');
     }
-    return Process.start("dart", args, workingDirectory:wd).then((process) {
+    return Process.start("dart", args, workingDirectory:working).then((process) {
         process.stdout.transform(new Utf8Decoder())
                 .transform(new LineSplitter())
                 .listen((String line){
@@ -63,6 +64,7 @@ getZipAssignment(String name, String url){
 }
 
 zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher, [String newOwner, String oldOwner='dart-targets']){
+    String working = wd;
     String realID = id;
     String subdirLoc = null;
     if(id.contains("/") && fromGitHub) {
@@ -75,7 +77,7 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
         subdirLoc += "targets-" + parts.last;
     }
     if(isTemplate) id = "template";
-    if (new Directory("$wd/$id").existsSync()){
+    if (new Directory("$working/$id").existsSync()){
         print("Assignment already downloaded", RED);
         return;
     }
@@ -104,7 +106,7 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
             } else filename = "$id/$filename";
             print(filename);
             if(!isTeacher && filename == "$id/targets/tests.dart"){
-                File tests = new File("$wd/$id/targets/tests.dart")..createSync(recursive: true);
+                File tests = new File("$working/$id/targets/tests.dart")..createSync(recursive: true);
                 var lines = UTF8.decode(file.content).split("\n");
                 String text = "";
                 for(String str in lines){
@@ -114,19 +116,19 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
                 }
                 tests.writeAsStringSync(text);
             } else if (!isTeacher && filename == "$id/targets/tests.json") {
-                File testjson = new File("$wd/$id/targets/tests.json")..createSync(recursive: true);
+                File testjson = new File("$working/$id/targets/tests.json")..createSync(recursive: true);
                 var config = JSON.decode(UTF8.decode(file.content));
                 config['owner'] = newOwner == null ? config['owner'] : newOwner;
                 config['id'] = id;
                 testjson.writeAsBytesSync(new JsonUtf8Encoder('    ').convert(config));
             } else if(filename.endsWith("/")){
-                new Directory("$wd/$filename")..createSync(recursive: true);
+                new Directory("$working/$filename")..createSync(recursive: true);
             }else{
-                new File("$wd/$filename")..createSync(recursive: true)..writeAsBytesSync(file.content);
+                new File("$working/$filename")..createSync(recursive: true)..writeAsBytesSync(file.content);
             }
         }
-        File testerFile = new File("$wd/$id/targets/tester.dart");
-        File helperFile = new File("$wd/$id/targets/helpers.dart");
+        File testerFile = new File("$working/$id/targets/tester.dart");
+        File helperFile = new File("$working/$id/targets/helpers.dart");
         testerFile.writeAsStringSync(tester_dart);
         helperFile.writeAsStringSync(helpers_dart);
         if(isTeacher){

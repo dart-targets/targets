@@ -52,12 +52,13 @@ submitCLI() async {
 }
 
 uploadSubmission(String email, String note) async {
-    File testerFile = new File("$wd/targets/tester.dart");
-    File helperFile = new File("$wd/targets/helpers.dart");
+    String working = wd;
+    File testerFile = new File("$working/targets/tester.dart");
+    File helperFile = new File("$working/targets/helpers.dart");
     await testerFile.writeAsString(tester_dart);
     await helperFile.writeAsString(helpers_dart);
     var results = await Process.run('dart', 
-        ['targets/tester.dart','submit'], workingDirectory:wd);
+        ['targets/tester.dart','submit'], workingDirectory:working);
     List<String> lines = results.stdout.split("\n");
     if(lines[0].contains("Unhandled exception:")){
         print("Assignment is corrupted. Redownload or contact your teacher.",RED);
@@ -86,7 +87,7 @@ uploadSubmission(String email, String note) async {
         } else if (line.startsWith("!")) {
             subm.files.remove(line.substring(1));
         } else {
-            String filedata = await new File(wd+"/"+line).readAsString();
+            String filedata = await new File(working+"/"+line).readAsString();
             subm.files[line] = filedata;
         }
     }

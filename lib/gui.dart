@@ -27,80 +27,85 @@ runGuiServer(port, [browser=true]){
     });
 }
 
-var socket;
-
-var serverPrint;
-var clientPrint;
-
-handleSocket(WebSocket newSocket) async {
-    // not sure if this is actually necessary
-    if(socket!=null){
-        socket.add(JSON.encode({'type':'newclient'}));
+var serverPrint = (str, [String type=PLAIN]){
+    str = str.toString();
+    if(type==PLAIN||Platform.isWindows){
+        stdout.writeln(str);
+    }else if(type==RED){
+        stdout.writeln("\u001b[0;31m"+str+"\u001b[0;0m");
+    }else if(type==GREEN){
+        stdout.writeln("\u001b[0;32m"+str+"\u001b[0;0m");
+    }else if(type==BLUE){
+        stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
     }
-    socket = newSocket;
-    serverPrint = (str, [String type=PLAIN]){
-        str = str.toString();
-        if(type==PLAIN||Platform.isWindows){
-            stdout.writeln(str);
-        }else if(type==RED){
-            stdout.writeln("\u001b[0;31m"+str+"\u001b[0;0m");
-        }else if(type==GREEN){
-            stdout.writeln("\u001b[0;32m"+str+"\u001b[0;0m");
-        }else if(type==BLUE){
-            stdout.writeln("\u001b[0;36m"+str+"\u001b[0;0m");
-        }
-    };
-    clientPrint = (str, [type=PLAIN]) => send({'type':'log','text':str});
-    print = clientPrint;
+};
+
+List<WebSocket> sockets = [];
+
+handleSocket(WebSocket socket) async {
+    sockets.add(socket);
+    var clientPrint = (str, [type=PLAIN]) => send({'type':'log','text':str}, socket);
     socket.listen((String s) async {
         try {
             var map = JSON.decode(s);
+            print = clientPrint;
+            map['socket'] = socket;
             switch (map['command']) {
                 case 'get':
-                    return await consoleGet(map);
+                    await consoleGet(map);
+                    break;
                 case 'test':
-                    return await consoleTest(map);
+                    await consoleTest(map);
+                    break;
                 case 'submit':
-                    return await consoleSubmit(map);
+                    await consoleSubmit(map);
+                    break;
                 case 'update':
-                    return await consoleUpdate(map);
+                    await consoleUpdate(map);
+                    break;
                 case 'directory':
-                    return await consoleDirectory(map);
+                    await consoleDirectory(map);
+                    break;
                 case 'read-file':
-                    return await consoleReadFile(map);
+                    await consoleReadFile(map);
+                    break;
                 case 'write-file':
-                    return await consoleWriteFile(map);
+                    await consoleWriteFile(map);
+                    break;
                 case 'save-submissions':
-                    return await consoleSaveSubmissions(map);
+                    await consoleSaveSubmissions(map);
+                    break;
                 case 'batch-grade':
-                    return await consoleBatchGrade(map);
+                    await consoleBatchGrade(map);
+                    break;
             }
+            print = serverPrint;
         } catch (e) {
             send({
                 'type': 'error',
                 'exception': '$e'
-            });
+            }, socket);
             serverPrint(e);
         }
     },onDone: () {
-        print = serverPrint;
+        sockets.remove(socket);
     });
     send({
         'type': 'init',
         'directory': Directory.current.path,
         'version': version
-    });
+    }, socket);
 }
 
-send(msg) {
-   socket.add(JSON.encode(msg)); 
+send(msg, socket) {
+    socket.add(JSON.encode(msg));
 }
 
 respond(msg, original) {
     msg['type'] = 'response';
     msg['command'] = original['command'];
     msg['cmd-id'] = original['cmd-id'];
-    send(msg);
+    send(msg, original['socket']);
 }
 
 consoleGet(msg) async {
@@ -138,17 +143,26 @@ consoleSubmit(msg) async {
     respond({'hash': hash}, msg);
 }
 
+bool updated = false;
+
 consoleUpdate(msg) async {
-    serverPrint("Update requested. Server about to close...");
-    serverPrint(Process.runSync('pub',['global','activate','targets']).stdout);
-    new Future.delayed(new Duration(milliseconds:2000),(){
-        server.close(force:true);
-        serverPrint("Starting new instance...");
-        Process.start('pub',['global','run','targets', 'console', '--background', '$currentPort'], runInShell:true).then((process) {
-            process.stdout.transform(new Utf8Decoder())
-                    .transform(new LineSplitter()).listen((String line){
-                serverPrint(line);
-            });
+    if (updated) return;
+    updated = true;
+    serverPrint(Process.runSync('pub',['global','activate', 'targets']).stdout);
+    await new Future.delayed(new Duration(milliseconds:500));
+    await server.close(force: true);
+    for (var socket in sockets) {
+        await socket.close(WebSocketStatus.GOING_AWAY, 'Server rebooting');   
+    }
+    serverPrint("Starting new instance...");
+    Process.start('pub',['global','run','targets', 'console', '--background'], runInShell:true).then((process) {
+        process.stdout.transform(new Utf8Decoder())
+                .transform(new LineSplitter()).listen((String line){
+            serverPrint(line);
+        });
+        process.stderr.transform(new Utf8Decoder())
+                .transform(new LineSplitter()).listen((String line){
+            serverPrint(line);
         });
     });
 }
