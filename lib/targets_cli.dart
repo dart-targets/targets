@@ -27,6 +27,9 @@ part 'teacher.dart';
 /// Support for sending submissions to Moss
 part 'moss.dart';
 
+/// Builds a test.dart based on test.json
+part 'testbuilder.dart';
+
 /// Helpful utility methods and classes
 part 'utils.dart';
 

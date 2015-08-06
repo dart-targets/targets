@@ -4,7 +4,14 @@ part of targets_cli;
 /// Submission and setup is in submit.dart
 
 checkAssign([bool useJson = false]){
-    if(!new File("$wd/targets/tester.dart").existsSync()){
+    var jsonFile = new File("$wd/targets/tests.json");
+    var testsFile = new File("$wd/targets/tests.dart");
+    if (jsonFile.existsSync()) {
+        var config = JSON.decode(jsonFile.readAsStringSync());
+        var testsdart = buildTestsDart(config);
+        testsFile.writeAsStringSync(testsdart);
+    }
+    if(!new File("$wd/targets/tests.dart").existsSync()){
         print("You are not in an assignment directory!",RED);
         return;
     }
@@ -106,7 +113,13 @@ zipLoad(bool isTemplate, bool fromGitHub, String url, String id, bool isTeacher,
                     }else if(!str.startsWith("///"))text+="$str\n";
                 }
                 tests.writeAsStringSync(text);
-            }else if(filename.endsWith("/")){
+            } else if (!isTeacher && filename == "$id/targets/tests.json") {
+                File testjson = new File("$wd/$id/targets/tests.json")..createSync(recursive: true);
+                var config = JSON.decode(UTF8.decode(file.content));
+                config['owner'] = newOwner == null ? config['owner'] : newOwner;
+                config['id'] = id;
+                testjson.writeAsBytesSync(new JsonUtf8Encoder('    ').convert(config));
+            } else if(filename.endsWith("/")){
                 new Directory("$wd/$filename")..createSync(recursive: true);
             }else{
                 new File("$wd/$filename")..createSync(recursive: true)..writeAsBytesSync(file.content);

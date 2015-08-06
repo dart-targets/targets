@@ -41,9 +41,14 @@ batch([bool useJson = false]) async {
         print("Tests complete. Results outputted to 'results.json'",GREEN);
         return;
     }
-    File tests = new File("$wd/targets/tests.dart");
-    File alttests = new File("$wd/template/targets/tests.dart");
-    if(!tests.existsSync()&&!alttests.existsSync()){
+    File jsonFile = new File("$wd/template/targets/tests.json");
+    File tests = new File("$wd/template/targets/tests.dart");
+    if (jsonFile.existsSync()) {
+        var config = JSON.decode(jsonFile.readAsStringSync());
+        var testsdart = buildTestsDart(config);
+        tests.writeAsStringSync(testsdart);
+    }
+    if(!tests.existsSync()){
         print("You need to add a template to this directory first!",RED);
         return;
     }
@@ -84,9 +89,14 @@ batch([bool useJson = false]) async {
 }
 
 batchJson() async {
-    File tests = new File("$wd/targets/tests.dart");
-    File alttests = new File("$wd/template/targets/tests.dart");
-    if(!(await tests.exists())&&!(await alttests.exists())){
+    File jsonFile = new File("$wd/template/targets/tests.json");
+    File tests = new File("$wd/template/targets/tests.dart");
+    if (jsonFile.existsSync()) {
+        var config = JSON.decode(jsonFile.readAsStringSync());
+        var testsdart = buildTestsDart(config);
+        tests.writeAsStringSync(testsdart);
+    }
+    if(!(await tests.exists())){
         print("You need to add a template to this directory first!", RED);
         return {'error': 'No template'};
     }
