@@ -7,6 +7,7 @@ int currentPort;
 
 runGuiServer(port, [browser=true]){
     var url = "$serverRoot/console";
+    port = 7620; // may change later
     return HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
         currentPort = port;
@@ -16,11 +17,20 @@ runGuiServer(port, [browser=true]){
         if(browser) openBrowser(url);
         server.listen((HttpRequest request) {
             if (WebSocketTransformer.isUpgradeRequest(request)){
-                WebSocketTransformer.upgrade(request).then(handleSocket);
+                String origin = request.headers.value('origin');
+                if (origin != serverRoot) {
+                    String msg = 'You may only connect from $serverRoot.\nRun `targets console --server $origin` to connect from $origin.';
+                    print(msg);
+                    request.response.statusCode = HttpStatus.FORBIDDEN;
+                    request.response.reasonPhrase = msg;
+                    request.response.close();
+                } else {
+                    WebSocketTransformer.upgrade(request).then(handleSocket);
+                }
             }
             else {
                 request.response.statusCode = HttpStatus.FORBIDDEN;
-                request.response.reasonPhrase = "Please connect from $url";
+                request.response.reasonPhrase = "WebSockets only";
                 request.response.close();
             }
         });
