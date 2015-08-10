@@ -11,7 +11,7 @@ runGuiServer(port, [browser=true]){
     return HttpServer.bind(InternetAddress.LOOPBACK_IP_V4, port).then((HttpServer newServer) {
         server = newServer;
         currentPort = port;
-        if(port!=7620 && url==defaultURL) url += "#$port";
+        if(port!=7620) url += "#$port";
         print("Connect to ws://localhost:$port at $url",GREEN);
         print("This process must remain running for the console to work.");
         if(browser) openBrowser(url);
@@ -57,45 +57,55 @@ handleSocket(WebSocket socket) async {
     var clientPrint = (str, [type=PLAIN]) => send({'type':'log','text':str}, socket);
     socket.listen((String s) async {
         try {
-            var map = JSON.decode(s);
+            var msg = JSON.decode(s);
             print = clientPrint;
-            map['socket'] = socket;
-            switch (map['command']) {
+            msg['socket'] = socket;
+            switch (msg['command']) {
                 case 'get':
-                    await consoleGet(map);
+                    await consoleGet(msg);
                     break;
                 case 'test':
-                    await consoleTest(map);
+                    await consoleTest(msg);
                     break;
                 case 'submit':
-                    await consoleSubmit(map);
+                    await consoleSubmit(msg);
                     break;
                 case 'update':
-                    await consoleUpdate(map);
+                    await consoleUpdate(msg);
                     break;
                 case 'directory':
-                    await consoleDirectory(map);
+                    await consoleDirectory(msg);
                     break;
                 case 'read-file':
-                    await consoleReadFile(map);
+                    await consoleReadFile(msg);
                     break;
                 case 'write-file':
-                    await consoleWriteFile(map);
+                    await consoleWriteFile(msg);
                     break;
                 case 'save-submissions':
-                    await consoleSaveSubmissions(map);
+                    await consoleSaveSubmissions(msg);
                     break;
                 case 'batch-grade':
-                    await consoleBatchGrade(map);
+                    await consoleBatchGrade(msg);
+                    break;
+                case 'run-file':
+                    await consoleRunFile(msg, socket);
+                    break;
+                case 'run-file-input':
+                    await consoleRunFileInput(msg);
+                    break;
+                case 'run-file-cancel':
+                    await consoleRunFileCancel(msg);
                     break;
             }
             print = serverPrint;
-        } catch (e) {
+        } catch (e, st) {
             send({
                 'type': 'error',
                 'exception': '$e'
             }, socket);
             serverPrint(e);
+            serverPrint(st);
         }
     },onDone: () {
         sockets.remove(socket);
@@ -226,3 +236,50 @@ consoleBatchGrade(msg) async {
     wd = Directory.current.path;
     respond({'results': results}, msg);
 }
+
+consoleRunFile(msg, socket) async {
+    File file = new File(msg['file']);
+    if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
+        throw new Exception("Console may only access files within root directory");
+    }
+    String working = file.parent.absolute.path;
+    var run = msg['run'];
+    String running = file.absolute.path.substring(working.length + 1);
+    if (run == 'java') {
+        var cfile = running;
+        running = running.split('.').first;
+        var result = await Process.run('javac', [cfile], workingDirectory: working);
+        if (result.stderr != null && result.stderr.length > 0) {
+            respond({'error': result.stderr}, msg);
+            return;
+        }
+    }
+    var args;
+    if (msg['args'] == null || msg['args'] == '') {
+        args = [];
+    } else {
+        args = msg['args'].split(' ');
+    }
+    args.insert(0, running);
+    var process = await Process.start(run, args, workingDirectory: working);
+    consoleRunFileInput = (msg) {
+        process.stdin.add(msg['data']);
+    };
+    
+    consoleRunFileCancel = (msg) {
+        process.kill();
+    };
+    process.stdout.listen((data){
+        send({'type': 'run-file-output', 'data': data}, socket);
+    }).onDone((){
+        respond({}, msg);
+        consoleRunFileInput = (msg) => null;
+        consoleRunFileCancel = (msg) => null;
+    });
+    process.stderr.listen((data){
+        send({'type': 'run-file-output', 'data': data}, socket);
+    });
+}
+
+var consoleRunFileInput = (msg) => null;
+var consoleRunFileCancel = (msg) => null;

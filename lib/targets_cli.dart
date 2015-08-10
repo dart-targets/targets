@@ -49,7 +49,7 @@ String wd = Directory.current.path;
 String home = null;
 
 /// Default server
-String serverRoot = "http://localhost:8080";
+String serverRoot = "http://codetargets.com";
 
 setHome() {
     if (home!=null) return;

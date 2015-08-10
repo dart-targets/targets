@@ -15,7 +15,7 @@ Future mossRun(){
     Directory template = new Directory("template");
     if(!template.existsSync()){
         print("You must add a template to this directory first!", RED);
-        return;
+        return null;
     }
     String home;
     if(Platform.isWindows){

@@ -102,8 +102,6 @@ class IOTarget extends TestTarget{
             if(!result){
                 if (output == "") {
                     this.error = out;
-                } else {
-                    this.error = "Expected $output, got $out";
                 }
             }
             return result;

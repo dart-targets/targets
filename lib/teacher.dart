@@ -26,12 +26,12 @@ saveSubmissions(String templateId, String directory, var data) async {
     }
     print("Downloading template...");
     var oldwd = working;
-    working = working + '/$directory';
+    wd = working + '/$directory';
     var oldprint = print;
     print = (a, [b]){};
     await getAssignment(templateId, true, true);
     print = oldprint;
-    working = oldwd;
+    wd = oldwd;
 }
 
 batch([bool useJson = false]) async {
