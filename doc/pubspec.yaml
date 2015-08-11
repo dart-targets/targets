@@ -1,8 +1,0 @@
-name: targets-docs
-author: Jack Thakar <jack@jackthakar.com>
-description: Documentation for Targets
-dev_dependencies:
-    md_to_html: ">=0.1.0 <0.2.0"
-transformers:
-    - md_to_html:
-        template: template.html

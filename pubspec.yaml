@@ -1,8 +1,8 @@
 name: targets
 author: Jack Thakar <jack@jackthakar.com>
 homepage: http://github.com/dart-targets/targets
-version: 0.8.0-experimental
-description: Simple assignment manager and autograder
+version: 0.8.0-beta
+description: Assignment manager for high school CS classes
 dependencies:
     archive: ">=1.0.19 <2.0.0"
     http: ">=0.11.1+3 <0.12.0"
