@@ -64,16 +64,15 @@ uploadSubmission(String email, String note) async {
         print("Assignment is corrupted. Redownload or contact your teacher.",RED);
         return;
     }
-    Submission subm = new Submission();
-    subm.course = lines[0].split(":")[0].trim();
-    subm.assignment = lines[0].split(":")[1].trim();
-    subm.student = email;
-    if (note != null) {
-        subm.note = note;
-    }
+    var subm = {
+        'course': lines[0].split(":")[0].trim(),
+        'assignment': lines[0].split(":")[1].trim(),
+        'student': email,
+        'note': note,
+        'files': {}
+    };
     lines.removeAt(0);
     lines.removeLast();
-    subm.files = {};
     for (String line in lines) {
         line = line.trim();
         if (line.startsWith("*.")) {
@@ -82,17 +81,16 @@ uploadSubmission(String email, String note) async {
             for(File f in files){
                 String relpath = f.path.substring(Directory.current.path.length+1);
                 String filedata = await f.readAsString();
-                subm.files[relpath] = filedata;
+                subm['files'][relpath] = filedata;
             }
         } else if (line.startsWith("!")) {
-            subm.files.remove(line.substring(1));
+            subm['files'].remove(line.substring(1));
         } else {
             String filedata = await new File(working+"/"+line).readAsString();
-            subm.files[line] = filedata;
+            subm['files'][line] = filedata;
         }
     }
-    bootstrapMapper();
-    String encSubm = mapper.encodeJson(subm);
+    String encSubm = JSON.encode(subm);
     print("Uploading submission...");
     String url = "$serverRoot/api/v1/upload";
     var response = await http.post(url, body: encSubm, headers: {

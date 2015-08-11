@@ -7,11 +7,6 @@ import 'dart:async';
 import 'package:archive/archive.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:redstone_mapper/mapper.dart' as mapper;
-import 'package:redstone_mapper/mapper_factory.dart';
-
-import 'package:targets/models.dart';
-
 /// Student commands not related to submission
 part 'student.dart';
 
