@@ -261,7 +261,7 @@ consoleRunFile(msg, socket) async {
         args = msg['args'].split(' ');
     }
     args.insert(0, running);
-    var process = await Process.start(run, args, workingDirectory: working);
+    var process = await Process.start(run, args, workingDirectory: working, runInShell: true);
     consoleRunFileInput = (msg) {
         process.stdin.add(msg['data']);
     };

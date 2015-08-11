@@ -9,7 +9,7 @@ Targets consists of three core components: a server that stores course, assignme
 This Pub package contains the desktop client, and can be installed or updated with:
 
     pub global activate targets
-    
+
 The server code (which also includes the web console) is available on [GitHub](https://github.com/dart-targets/targets_server) if you want to host it yourself. By default, the desktop client connects to the Targets server running at [codetargets.com](http://codetargets.com). If you are interested in using this server for a class, please [contact us](mailto:targets@codetargets.com). If you're hosting your own server, add `--server http://yourserver.com` to the end of every command.
 
 ### Using the Web Console ###
