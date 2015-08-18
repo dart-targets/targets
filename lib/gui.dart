@@ -82,6 +82,18 @@ handleSocket(WebSocket socket) async {
                 case 'write-file':
                     await consoleWriteFile(msg);
                     break;
+                case 'create-file':
+                    await consoleCreateFile(msg);
+                    break;
+                case 'delete-file':
+                    await consoleDeleteFile(msg);
+                    break;
+                case 'create-directory':
+                    await consoleCreateDirectory(msg);
+                    break;
+                case 'delete-directory':
+                    await consoleDeleteDirectory(msg);
+                    break;
                 case 'save-submissions':
                     await consoleSaveSubmissions(msg);
                     break;
@@ -225,6 +237,42 @@ consoleWriteFile(msg) async {
     respond({}, msg);
 }
 
+consoleCreateFile(msg) async {
+    File file = new File(msg['file']);
+    if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
+        throw new Exception("Console may only access files within root directory");
+    }
+    await file.create();
+    respond({}, msg);
+}
+
+consoleCreateDirectory(msg) async {
+    Directory file = new Directory(msg['directory']);
+    if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
+        throw new Exception("Console may only access files within root directory");
+    }
+    await file.create();
+    respond({}, msg);
+}
+
+consoleDeleteFile(msg) async {
+    File file = new File(msg['file']);
+    if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
+        throw new Exception("Console may only access files within root directory");
+    }
+    await file.delete();
+    respond({}, msg);
+}
+
+consoleDeleteDirectory(msg) async {
+    Directory file = new Directory(msg['directory']);
+    if (!file.absolute.path.startsWith(wd) || msg['file'].contains('..')) {
+        throw new Exception("Console may only access files within root directory");
+    }
+    await file.delete();
+    respond({}, msg);
+}
+
 consoleSaveSubmissions(msg) async {
     await saveSubmissions(msg['templateId'], msg['directory'], msg['submissions']);
     respond({}, msg);
@@ -248,7 +296,7 @@ consoleRunFile(msg, socket) async {
     if (run == 'java') {
         var cfile = running;
         running = running.split('.').first;
-        var result = await Process.run('javac', [cfile], workingDirectory: working);
+        var result = await Process.run('javac', [cfile], workingDirectory: working, runInShell: true);
         if (result.stderr != null && result.stderr.length > 0) {
             respond({'error': result.stderr}, msg);
             return;
