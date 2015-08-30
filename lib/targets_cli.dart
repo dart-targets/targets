@@ -77,7 +77,7 @@ saveUserSettings() {
     file.writeAsStringSync(json);
 }
 
-const String version = "0.8.0-beta";
+const String version = "0.8.0-beta.3";
 
 /// If not null, called by zipLoad when complete
 Function loadCallback = null;
