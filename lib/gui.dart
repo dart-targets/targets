@@ -208,11 +208,11 @@ consoleDirectory(msg) async {
     respond({'tree': tree}, msg);
 }
 
-findTree(Directory dir) async {
+findTree(Directory dir, [bool root = true) async {
     var tree = {};
     int length = (dir.absolute.path + Platform.pathSeparator).length;
-    if (Platform.isWindows) {
-      length -= 1;
+    if (Platform.isWindows && root) {
+      length -= 1; // hacky fix - TODO: make not so hacky
     }
     await for (var file in dir.list()) {
         file = file.absolute;
@@ -220,7 +220,7 @@ findTree(Directory dir) async {
         if (file is File) {
             tree[path] = path;
         } else if (file is Directory) {
-            tree[path] = await findTree(file);
+            tree[path] = await findTree(file, false);
         }
    }
    return tree;
