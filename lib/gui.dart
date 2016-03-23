@@ -140,6 +140,10 @@ respond(msg, original) {
     send(msg, original['socket']);
 }
 
+_currentDirectorySlash() {
+  return Directory.current.path + Platform.pathSeparator;
+}
+
 consoleGet(msg) async {
     String id = msg['assignment'];
     if (msg.containsKey('url') && msg['url'] != null) {
@@ -158,7 +162,7 @@ consoleTest(msg) async {
     if (msg['json']) {
         print = (text) => output += text + '\n';
     }
-    wd = Directory.current.path + "/" + msg['assignment'];
+    wd = _currentDirectorySlash() + msg['assignment'];
     await checkAssign(msg['json']);
     wd = Directory.current.path;
     if (msg['json']) {
@@ -169,7 +173,7 @@ consoleTest(msg) async {
 }
 
 consoleSubmit(msg) async {
-    wd = Directory.current.path + "/" + msg['assignment'];
+    wd = _currentDirectorySlash() + msg['assignment'];
     String hash = await uploadSubmission(msg['email'], msg['note']);
     wd = Directory.current.path;
     respond({'hash': hash}, msg);
@@ -206,10 +210,10 @@ consoleDirectory(msg) async {
 
 findTree(Directory dir) async {
     var tree = {};
-    int length = dir.absolute.path.length;
+    int length = (dir.absolute.path + Platform.pathSeparator).length;
     await for (var file in dir.list()) {
         file = file.absolute;
-        var path = file.path.substring(length + 1);
+        var path = file.path.substring(length );
         if (file is File) {
             tree[path] = path;
         } else if (file is Directory) {
@@ -279,7 +283,7 @@ consoleSaveSubmissions(msg) async {
 }
 
 consoleBatchGrade(msg) async {
-    wd = Directory.current.path + '/' + msg['directory'];
+    wd = _currentDirectorySlash() + msg['directory'];
     var results = await batchJson();
     wd = Directory.current.path;
     respond({'results': results}, msg);
