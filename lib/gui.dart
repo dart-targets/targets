@@ -211,9 +211,12 @@ consoleDirectory(msg) async {
 findTree(Directory dir) async {
     var tree = {};
     int length = (dir.absolute.path + Platform.pathSeparator).length;
+    if (Platform.isWindows) {
+      length -= 1;
+    }
     await for (var file in dir.list()) {
         file = file.absolute;
-        var path = file.path.substring(length );
+        var path = file.path.substring(length);
         if (file is File) {
             tree[path] = path;
         } else if (file is Directory) {
