@@ -208,7 +208,7 @@ consoleDirectory(msg) async {
     respond({'tree': tree}, msg);
 }
 
-findTree(Directory dir, [bool root = true) async {
+findTree(Directory dir, [bool root = true]) async {
     var tree = {};
     int length = (dir.absolute.path + Platform.pathSeparator).length;
     if (Platform.isWindows && root) {
